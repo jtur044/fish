@@ -1,4 +1,4 @@
-const fish_body = [ 
+let fish_body = [ 
   [ 116.9185,  102.6403 ],
   [ 120.7168,   89.7261 ],
   [ 134.3908,   75.2924 ],
@@ -39,7 +39,7 @@ const fish_body = [
   [ 116.9185,  102.6403 ]];
 
 
-const fish_upper_fin = [   [169.9096, 60.0080 ],
+let fish_upper_fin = [   [169.9096, 60.0080 ],
                       [177.1416,   51.3296 ],
                       [190.8824,   44.8208 ],
                       [207.5160,   39.0352 ],
@@ -49,7 +49,7 @@ const fish_upper_fin = [   [169.9096, 60.0080 ],
                       [249.4616,   62.9008 ],
                       [245.8456,   70.1328 ]];
                             
-const fish_lower_fin = [
+let fish_lower_fin = [
   [ 155.0102,  163.8204 ],
   [ 158.7000,  173.6599 ],
   [ 170.3844,  180.4245 ],
@@ -64,7 +64,7 @@ const fish_lower_fin = [
   [ 241.7204,  158.2857 ]];
 
 
-const fish_eye = [ 
+let fish_eye = [ 
   [ 151.5883,   90.7226 ],
   [ 154.3993,   84.5386 ],
   [ 161.1455,   82.2898 ],
@@ -75,3 +75,15 @@ const fish_eye = [
   [ 157.7724,   100.2799 ],
   [ 152.7127,   96.9067 ],
   [ 151.5883,   90.7226 ]];
+
+
+const offsetX = +170; 
+const offsetY = +120;
+
+fish_body = fish_body.map (elem => {return [elem[0]-offsetX, elem[1]-offsetY]});
+fish_upper_fin = fish_upper_fin.map (elem => {return [elem[0]-offsetX, elem[1]-offsetY]});
+fish_lower_fin = fish_lower_fin.map (elem => {return [elem[0]-offsetX, elem[1]-offsetY]});
+fish_eye = fish_eye.map (elem => {return [elem[0]-offsetX, elem[1]-offsetY]});
+
+
+
