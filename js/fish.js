@@ -80,10 +80,46 @@ let fish_eye = [
 const offsetX = +170; 
 const offsetY = +120;
 
+
+
 fish_body = fish_body.map (elem => {return [elem[0]-offsetX, elem[1]-offsetY]});
 fish_upper_fin = fish_upper_fin.map (elem => {return [elem[0]-offsetX, elem[1]-offsetY]});
 fish_lower_fin = fish_lower_fin.map (elem => {return [elem[0]-offsetX, elem[1]-offsetY]});
 fish_eye = fish_eye.map (elem => {return [elem[0]-offsetX, elem[1]-offsetY]});
+
+
+function createFish (paper) {
+
+  const controlPointCalc  = controlPoint(line, smoothing)
+  const bezierCommandCalc = bezierCommand(controlPointCalc)
+  let svg_fish_eye       = svgPathString(fish_eye, bezierCommandCalc);
+  let svg_fish_body      = svgPathString(fish_body, bezierCommandCalc);
+  let svg_fish_upper_fin = svgPathString(fish_upper_fin, bezierCommandCalc);
+  let svg_fish_lower_fin = svgPathString(fish_lower_fin, bezierCommandCalc);
+
+  var fishBodyPath     = paper.path(svg_fish_body);
+  var fishEyePath      = paper.path(svg_fish_eye);
+  var fishUpperFinPath = paper.path(svg_fish_upper_fin);
+  var fishLowerFinPath = paper.path(svg_fish_lower_fin);
+
+  let fish_outer = paper.set (fishBodyPath, fishEyePath, fishUpperFinPath, fishLowerFinPath).attr({ fill: "none", stroke: "#000000", "stroke-width" : 6});
+  fish_outer.translate(0,0);
+
+  var fishBodyPath2    = paper.path(svg_fish_body);
+  var fishEyePath2   = paper.path(svg_fish_eye);
+  var fishUpperFinPath2 = paper.path(svg_fish_upper_fin);
+  var fishLowerFinPath2 = paper.path(svg_fish_lower_fin);
+
+  let fish_inner = paper.set (fishBodyPath2, fishEyePath2, fishUpperFinPath2, fishLowerFinPath2).attr({ fill: "none", stroke: "#FFFFFF", "stroke-width" : 2});
+  fish_inner.translate(0,0);
+
+  let fishSet = paper.set(fish_inner, fish_outer);
+  let fish_box = fishSet.getBBox ();
+  let fishBox  = paper.rect(0, 0, fish_box.width, fish_box.height).attr({ fill: "none", "stroke-width" : 2});
+  return fishSet.push (fishBox);
+
+}
+
 
 
 

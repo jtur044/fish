@@ -4,43 +4,31 @@
 
 <script src="./js/bezier.js"></script>
 <script src="./js/fish.js"></script>
+<script src="./js/Logger.js"></script>
+
 
 <script type="text/javascript" src="./js/dat.gui.min.js"></script>
-<script type="text/javascript">
-    
-    
-</script>
-
-
+<script src="http://cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"> </script> 
 
 <script>
 
 const mysvg = document.querySelector('.svg');
-const smoothing = 0.2
+const smoothing = 0.2;
   
-
-const controlPointCalc = controlPoint(line, smoothing)
-const bezierCommandCalc = bezierCommand(controlPointCalc)
-
-let svg_fish_eye       = svgPathString(fish_eye, bezierCommandCalc);
-let svg_fish_body      = svgPathString(fish_body, bezierCommandCalc);
-let svg_fish_upper_fin = svgPathString(fish_upper_fin, bezierCommandCalc);
-let svg_fish_lower_fin = svgPathString(fish_lower_fin, bezierCommandCalc);
-
 
 </script>
 
 
 <div id="container"></div> 
-<script src="http://cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"> </script> 
+
 <script> 
 
 let sw = screen.width;
 let sh = screen.height;
 let points = [ [ sw/2 - sw/4, sh/2 - sh/4 ], 
-				[ sw/2 - sw/4, sh - sh/4], 
-				[ sw - sw/4, sh/2 - sh/4 ], 
-				[ sw - sw/4, sh - sh/4 ] ];
+				       [ sw - sw/4, sh/2 - sh/4 ], 
+               [ sw - sw/4, sh - sh/4 ],
+               [ sw/2 - sw/4, sh - sh/4]];
 
 let index = 0;
 
@@ -50,66 +38,48 @@ var paper = Raphael("container", screen.width, screen.height);
 paper.canvas.style.backgroundColor = '#7F7F7F';
 
 
-
-
-var fishBodyPath 	 = paper.path(svg_fish_body);
-var fishEyePath 	 = paper.path(svg_fish_eye);
-var fishUpperFinPath = paper.path(svg_fish_upper_fin);
-var fishLowerFinPath = paper.path(svg_fish_lower_fin);
-
-let fish_outer = paper.set (fishBodyPath, fishEyePath, fishUpperFinPath, fishLowerFinPath).attr({ fill: "none", stroke: "#000000", "stroke-width" : 6});
-fish_outer.translate(0,0);
-
-var fishBodyPath2 	 = paper.path(svg_fish_body);
-var fishEyePath2 	 = paper.path(svg_fish_eye);
-var fishUpperFinPath2 = paper.path(svg_fish_upper_fin);
-var fishLowerFinPath2 = paper.path(svg_fish_lower_fin);
-
-let fish_inner = paper.set (fishBodyPath2, fishEyePath2, fishUpperFinPath2, fishLowerFinPath2).attr({ fill: "none", stroke: "#FFFFFF", "stroke-width" : 2});
-fish_inner.translate(0,0);
-
-
-
-let fishSet = paper.set(fish_inner, fish_outer);
-let fish_box = fishSet.getBBox ();
-let fishBox  = paper.rect(0, 0, fish_box.width, fish_box.height).attr({ fill: "none", "stroke-width" : 2});
-fishSet.push (fishBox);
-
-
-
-
+let Dory = createFish (paper);
+Dory.hide ();
 
 
 var FizzyText = function() {
-  this.message = 'dat.gui';
-  
-  this.distance 	= 50; 
-  this.logMAR   	= 0.5;
-  this.scale    	= 1.0;
+
+  this.message      = 'dat.gui';  
+  this.distance 	  = 50; 
+  this.logMAR   	  = 0.5;
+  this.scale    	  = 1.0;
   this.scroll_speed = 3.0;  
-  this.jump_time 	= 2000;  
-  this.optotype  = 'Fish';
-  this.movement  = 'Jump';
+  this.jump_time 	  = 2000;  
+  this.optotype     = 'Fish';
+  this.movement     = 'Jump';
   this.displayOutline = false;
 };
 
+let text  = new FizzyText();
+let gui   = new dat.GUI();
+
+
+/* JUMP ANIMATION */
+
 function jumpAround () {
 
+  index = 0;
+  let x = points[index][0];
+  let y = points[index][1];
+  Dory.animate ({ transform: ['t', x, y, text.scale, text.scale, 0.0, 0.0 ]});
+  Dory.show ();
 
+  index = 0;
 	let jumpHandle = setInterval ( function () {
 
-		let x = points[index][0];
-		let y = points[index][1];
-
-		console.log (x);
-		console.log (y);
-
-		fishSet.animate({ transform: ['t', x, y ]});
-		index += 1;
+		x = points[index][0];
+		y = points[index][1];
+		Dory.animate({ transform: [ 't', x, y, 's', text.scale, text.scale, 0.0, 0.0  ]});
+    index += 1;
 		if (index > 3)
 			index = 0;
 
-	}, 1000);
+	}, 2000);
 
 
 	return jumpHandle;
@@ -118,23 +88,29 @@ function jumpAround () {
 
 
 
+let animationHandle;
+
 window.onload = function() {
 
 
-  var text  = new FizzyText();
-  var gui   = new dat.GUI();
-
 
   function setValue() {
-		jumpAround ();
-		console.log (text);
+
+    //alert ('fire');
+    //Dory.hide ();
+    clearInterval (animationHandle);
+    animationHandle = jumpAround ();
+    //Dory.show ();
+	
+    log ('set value fired!');
+    //console.log (text);
   }
 
 
   gui.add(text, 'message');
   gui.add(text, 'distance', 50).onChange(setValue);  
-  gui.add(text, 'optotype', [ 'Fish', 'Grating' ] ).onChange(setValue);
-  gui.add(text, 'movement', [ 'Jump', 'Scroll' ] ).onChange(setValue);;
+  gui.add(text, 'optotype', [ 'Fish', 'Grating' ] ).onFinishChange(setValue);
+  gui.add(text, 'movement', [ 'Jump', 'Scroll' ] ).onFinishChange(setValue);;
 
   gui.add(text, 'jump_time', 2000).onChange(setValue);;
   gui.add(text, 'scroll_speed', 0.0, 10.0).onChange(setValue);;
@@ -142,14 +118,16 @@ window.onload = function() {
 
   var f1 = gui.addFolder('Fish options');
   gui.add(text, 'logMAR', 0.0, 1.0).onChange(setValue);
-  gui.add(text, 'scale', 0.5, 2.0).onChange(setValue);
+  gui.add(text, 'scale', 0.5, 2.0).onFinishChange(setValue);
   f1.open();
 
   var f2 = gui.addFolder('Grating options');
   gui.add(text, 'logMAR', 0.0, 1.0).onChange(setValue);
   f2.open();
 
-  jumpAround ();
+  Logger.open ();
+
+  animationHandle = jumpAround ();
 
 };
 
