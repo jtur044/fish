@@ -13,7 +13,7 @@
 <script>
 
 const mysvg = document.querySelector('.svg');
-const smoothing = 0.2;
+//const smoothing = 0.2;
   
 
 </script>
@@ -37,8 +37,7 @@ let index = 0;
 var paper = Raphael("container", screen.width, screen.height); 
 paper.canvas.style.backgroundColor = '#7F7F7F';
 
-
-let Dory = createFish (paper);
+let Dory = new Fish (paper);
 Dory.hide ();
 
 
@@ -66,8 +65,8 @@ function jumpAround () {
   index = 0;
   let x = points[index][0];
   let y = points[index][1];
+
   Dory.animate ({ transform: ['t', x, y, text.scale, text.scale, 0.0, 0.0 ]});
-  Dory.show ();
 
   index = 0;
 	let jumpHandle = setInterval ( function () {
@@ -75,6 +74,8 @@ function jumpAround () {
 		x = points[index][0];
 		y = points[index][1];
 		Dory.animate({ transform: [ 't', x, y, 's', text.scale, text.scale, 0.0, 0.0  ]});
+    Dory.show ();
+
     index += 1;
 		if (index > 3)
 			index = 0;
@@ -98,11 +99,11 @@ window.onload = function() {
 
     //alert ('fire');
     //Dory.hide ();
-    clearInterval (animationHandle);
-    animationHandle = jumpAround ();
+    //clearInterval (animationHandle);
+    //animationHandle = jumpAround ();
     //Dory.show ();
 	
-    log ('set value fired!');
+    log ('set-value fired!');
     //console.log (text);
   }
 
