@@ -1,0 +1,54 @@
+{              "cameraString"                : "Logitech HD Pro Webcam C920",
+                "audioString"                : "Microphone (HD Pro Webcam C920)",
+                "OutputDirectory"            : "D:\\hPod\\DATA",
+                "AllowDataOverwrite"         : true,
+                "FullScreenEnabled"          : false, 
+                "port"                       : 8080,
+                "MaximumRecordTime"          : 1800,
+                "displayInformation"         : { "name": "Alienware Laptop (15-inch)",
+                                                 "distance": 70, 
+                                                 "dimension": {
+                                                        "width": 34.93, 
+                                                        "height": 24.07, 
+                                                        "depth": 1.55  }
+                                                },
+                "distanceList": [{
+                        "name": "50 cm",
+                        "value": 50,
+                        "active": false
+                    },
+                    {
+                        "name": "70 cm",
+                        "value": 70,
+                        "active": true
+                    }
+                ],
+                "protocolList": [{
+                        "name": "Test long",
+                        "value": ".\\protocols\\hpod-full-protocol-11092019-pseudorandom-1.json",
+                        "active": true,
+                        "desc": "28/6/19 hpod pseudorandom"
+                    },
+                    {
+                        "name": "Debug protocol (long)",
+                        "value": ".\\protocols\\debug.json",
+                        "active": false,
+                        "desc": "28/6/19 longer debug protocol > 1 min"
+                    },
+                    {
+                        "name": "Debug protocol (short)",
+                        "value": ".\\protocols\\debug-short.json",
+                        "active": false,
+                        "desc": "28/6/19 shorter debug protocol < 1 min"
+                    },
+                    {
+                        "name": "Debug protocol (loop)",
+                        "value": ".\\protocols\\debug-loop.json",
+                        "active": false,
+                        "desc": "09/09/19 debug loop"
+                    }
+                ]
+}
+
+
+

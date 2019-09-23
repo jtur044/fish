@@ -73,8 +73,7 @@ let fish_eye = [
   [ 173.5137,   96.3445 ],
   [ 166.2052,   101.9664 ],
   [ 157.7724,   100.2799 ],
-  [ 152.7127,   96.9067 ],
-  [ 151.5883,   90.7226 ]];
+  [ 152.7127,   96.9067 ]];
 
 
 const offsetX = +170; 
@@ -122,9 +121,16 @@ class Fish {
     this.set.animate (attr);
   }
 
-  attr (which_attr) {
-    console.log ( this.inner.outline.attr () ); //(which_attr); 
-    console.log ( this.inner.outline.attr () ); // (which_attr); 
+  attr (val) {
+
+    console.log (val);
+    log (val['inner-stroke-width']);
+
+    this.inner.outline.attr ( { "stroke-width" : val['inner-stroke-width'] } );
+    this.outer.outline.attr ( { "stroke-width" : val['outer-stroke-width'] } );
+    
+    //console.log ( this.inner.outline.attr () ); //(which_attr); 
+    //console.log ( this.inner.outline.attr () ); // (which_attr); 
   }
 
   createFish () {
@@ -140,8 +146,8 @@ class Fish {
 
     /* */
 
-    this.outer.eye       = paper.path(svgPathString(_fish_eye, bezierCommandCalc));
-    this.outer.body      = paper.path(svgPathString(_fish_body, bezierCommandCalc));
+    this.outer.eye       = paper.path(svgPathString(_fish_eye, bezierCommandCalc)+'z');
+    this.outer.body      = paper.path(svgPathString(_fish_body, bezierCommandCalc)+'z');
     this.outer.upper_fin = paper.path(svgPathString(_fish_upper_fin, bezierCommandCalc));
     this.outer.lower_fin = paper.path(svgPathString(_fish_lower_fin, bezierCommandCalc));
     this.outer.outline   = paper.set (this.outer.body, this.outer.eye, this.outer.upper_fin, this.outer.lower_fin)
@@ -149,8 +155,8 @@ class Fish {
 
     /* */ 
 
-    this.inner.eye       = paper.path(svgPathString(_fish_eye, bezierCommandCalc));
-    this.inner.body      = paper.path(svgPathString(_fish_body, bezierCommandCalc));
+    this.inner.eye       = paper.path(svgPathString(_fish_eye, bezierCommandCalc)+'z');
+    this.inner.body      = paper.path(svgPathString(_fish_body, bezierCommandCalc)+'z');
     this.inner.upper_fin = paper.path(svgPathString(_fish_upper_fin, bezierCommandCalc));
     this.inner.lower_fin = paper.path(svgPathString(_fish_lower_fin, bezierCommandCalc));
     this.inner.outline   = paper.set (this.inner.body, this.inner.eye, this.inner.upper_fin, this.inner.lower_fin)

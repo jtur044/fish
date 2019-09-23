@@ -1,113 +1,57 @@
 <!DOCTYPE html>
 <html>
 
+<script
+  src="https://code.jquery.com/jquery-3.4.1.js"
+  integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
+  crossorigin="anonymous"></script>
 
 <script src="./js/bezier.js"></script>
 <script src="./js/fish.js"></script>
 <script src="./js/utils.js"></script>
 <script src="./js/Logger.js"></script>
-
+<script src="./js/utils.js"></script>
 
 <script type="text/javascript" src="./js/dat.gui.min.js"></script>
 <script src="http://cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"> </script> 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/json5/0.5.1/json5.js"></script>
 
 <script>
 
 const mysvg = document.querySelector('.svg');
-//const smoothing = 0.2;
   
 
 </script>
 
 
-<div id="container"></div> 
 
 <script> 
 
-let sw = screen.width;
-let sh = screen.height;
-let points = [ [ sw/2 - sw/4, sh/2 - sh/4 ], 
-				       [ sw - sw/4, sh/2 - sh/4 ], 
-               [ sw - sw/4, sh - sh/4 ],
-               [ sw/2 - sw/4, sh - sh/4]];
 
-let index = 0;
+let FizzyText, text, gui, Dory, display;
 
 
+function fishMenu () {
 
-var paper = Raphael("container", screen.width, screen.height); 
-paper.canvas.style.backgroundColor = '#7F7F7F';
+  FizzyText = function() {
 
-let Dory = new Fish (paper);
-Dory.hide ();
+    this.message      = 'dat.gui';  
+    this.distance     = 50; 
+    this.logMAR       = 0.5;
+    this.scale        = 1.0;
+    this.scroll_speed = 3.0;  
+    this.jump_time    = 2000;  
+    this.optotype     = 'Fish';
+    this.movement     = 'Jump';
+    this.displayOutline = false;
+  };
 
-
-var FizzyText = function() {
-
-  this.message      = 'dat.gui';  
-  this.distance 	  = 50; 
-  this.logMAR   	  = 0.5;
-  this.scale    	  = 1.0;
-  this.scroll_speed = 3.0;  
-  this.jump_time 	  = 2000;  
-  this.optotype     = 'Fish';
-  this.movement     = 'Jump';
-  this.displayOutline = false;
-};
-
-let text  = new FizzyText();
-let gui   = new dat.GUI();
-
-
-/* JUMP ANIMATION */
-
-function jumpAround () {
-
-  index = 0;
-  let x = points[index][0];
-  let y = points[index][1];
-
-  Dory.animate ({ transform: ['t', x, y, text.scale, text.scale, 0.0, 0.0 ]});
-
-  index = 0;
-	let jumpHandle = setInterval ( function () {
-
-		x = points[index][0];
-		y = points[index][1];
-		Dory.animate({ transform: [ 't', x, y, 's', text.scale, text.scale, 0.0, 0.0  ]});
-    Dory.show ();
-
-    index += 1;
-		if (index > 3)
-			index = 0;
-
-	}, 2000);
-
-
-	return jumpHandle;
-
-}
-
-
-
-let animationHandle;
-
-window.onload = function() {
-
-
+  text  = new FizzyText();
+  gui   = new dat.GUI();
 
   function setValue() {
-
-    //alert ('fire');
-    //Dory.hide ();
-    //clearInterval (animationHandle);
-    //animationHandle = jumpAround ();
-    //Dory.show ();
-	
     log ('set-value fired!');
-    //console.log (text);
   }
-
 
   gui.add(text, 'message');
   gui.add(text, 'distance', 50).onChange(setValue);  
@@ -127,11 +71,105 @@ window.onload = function() {
   gui.add(text, 'logMAR', 0.0, 1.0).onChange(setValue);
   f2.open();
 
-  Logger.open ();
+}
 
-  animationHandle = jumpAround ();
 
-};
+let sw = screen.width;
+let sh = screen.height;
+let points = [ [ sw/2 - sw/4, sh/2 - sh/4 ], 
+				       [ sw - sw/4, sh/2 - sh/4 ], 
+               [ sw - sw/4, sh - sh/4 ],
+               [ sw/2 - sw/4, sh - sh/4]];
+
+let index = 0;
+
+
+
+
+/* JUMP ANIMATION */
+
+
+function updateDrawing (x, y, w) {
+
+    Dory.animate({ transform: [ 't', x, y, 's', text.scale, text.scale, 0.0, 0.0  ]});
+    Dory.attr( { "inner-stroke-width": w, "outer-stroke-width": 2*w } );
+    Dory.show ();
+
+}
+
+
+function jumpAround () {
+
+  index = 0;
+  let x = points[index][0];
+  let y = points[index][1];
+  let w = Math.floor (logMAR2px(display, text.logMAR));
+
+
+  /* FISH STATIC */
+  updateDrawing (x, y, w);
+
+  index = 0;
+	let jumpHandle = setInterval ( function () {
+
+    display.distance = text.distance;
+		x = points[index][0]; y = points[index][1];
+    w = Math.floor (logMAR2px(display, text.logMAR));
+
+    /* FISH JUMP AROUND */
+    updateDrawing (x, y, w);
+
+    index += 1;
+		if (index > 3)
+			index = 0;
+
+	}, 2000);
+
+
+	return jumpHandle;
+
+}
+
+
+function startFishAnimation () {
+
+  Dory = new Fish (paper);
+  Dory.hide ();
+  jumpAround ();
+
+}
+
+
+
+
+let animationHandle, paper;
+
+$( "document").ready ( function () {
+
+
+  loadConfiguration ('./config/config.default.json', function (data) { 
+
+    display = data.displayInformation;
+    display.resolution = { width: screen.width, height: screen.height };
+
+    paper = Raphael("container", display.resolution.width, display.resolution.height); 
+    paper.canvas.style.backgroundColor = '#7F7F7F';
+
+    fishMenu ();
+    startFishAnimation ();
+
+    Logger.open ();
+
+
+
+  });
+
+
+
+});
+
+
+
 
 
 
@@ -140,6 +178,10 @@ window.onload = function() {
 </script> 
 
 <body>
+
+
+<div id="container"></div> 
+
 </body>
 
 
