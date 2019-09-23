@@ -48,9 +48,9 @@ function check(e) {
       ) {
               // fullscreen is activated
               console.log('fullscreen display - STARTING');
-              StimulusRunning = true;  
-              gui.open();
-              animate();
+              // StimulusRunning = true;  
+              // gui.open();
+              // animate();
 
       } else {
 
@@ -64,20 +64,6 @@ function check(e) {
   document.addEventListener('webkitfullscreenchange', function(e) { check(); }, false);
   document.addEventListener('mozfullscreenchange', function(e) { check(); }, false);
   document.addEventListener('fullscreenchange', function(e) { check(); }, false);
-
-
-  function startStimulusDisplay() {
-        requestFullScreen(document.documentElement);
-        toggle_visibility('displayer');        
-    }
-
-
-  function stopStimulusDisplay() {
-        toggle_visibility('displayer');
-        StimulusRunning = false;        
-        gui.close();    
-        exitFullScreen(document);
-  };
 
 
 
