@@ -57,6 +57,10 @@ const mysvg = document.querySelector('.svg');
   margin-bottom: 0px;
 }
 
+#fishworld {
+  overflow: hidden;
+}
+
 </style>
 
 
@@ -83,6 +87,7 @@ function fishMenu () {
 
   text  = new FizzyText();
   gui   = new dat.GUI();
+  //pdiv.appendChild(gui.domElement);
 
   function setValue() {
     log ('set-value fired!');
@@ -146,8 +151,8 @@ function jumpAround () {
 
 
   /* FISH STATIC */
-  updateDrawing (x, y, w);
-
+  updateDrawing (-100, -100, w);
+  
   index = 0;
 	jumpingFishTimer = setInterval ( function () {
 
@@ -162,7 +167,7 @@ function jumpAround () {
 		if (index > 3)
 			index = 0;
 
-	}, 2000);
+	}, 1000);
 
 
 	return;
@@ -173,7 +178,7 @@ function jumpAround () {
 
 
   function startStimulusDisplay() {
-        requestFullScreen(document.documentElement);
+        requestFullScreen(document.getElementById("fishworld"));
         // toggle_visibility('displayer');        
     }
 
@@ -195,8 +200,11 @@ function jumpAround () {
 function startFishAnimation () {
 
   startStimulusDisplay();
+
+
+
   Dory = new Fish (paper);
-  Dory.show ();
+  Dory.hide ();
   jumpAround ();
 
 }
@@ -214,8 +222,10 @@ function startFishAnimation () {
 
       $("#main").hide ();
       $("#fishworld").show ();
-      gui.close ();
-      
+      // gui.close ();
+      // fishMenu ();
+
+
 
       display = data.displayInformation;
       display.resolution = { width: screen.width, height: screen.height };
@@ -223,11 +233,9 @@ function startFishAnimation () {
       paper = Raphael("fishworld", display.resolution.width, display.resolution.height); 
       paper.canvas.style.backgroundColor = '#7F7F7F';
 
-
       console.log (display);
-
-
       startFishAnimation ();
+
     });
 
   }
@@ -237,7 +245,6 @@ function startFishAnimation () {
 let animationHandle, paper;
 
 $( "document").ready ( function () {
-
 
 
   fishMenu ();      
@@ -273,7 +280,7 @@ $( "document").ready ( function () {
 
   <div class="container">
   <center>
-    <h1><b><span id="title">Vision demonstrations</span></b></h1>
+    <h1><b><span id="title">Vision testing demonstrations on the web</span></b></h1>
     <p id="description">
       Jason Turuwhenua
     </p>
@@ -290,14 +297,13 @@ $( "document").ready ( function () {
           <div class="card shadow">
               <div class="row no-gutters">
                   <div class="col-auto">
-                      <img src="img/640px-Synchiropus_splendidus_2_Luc_Viatour.jpg" class="img-fluid" alt="">
+                      <img width="250" src="img/640px-Synchiropus_splendidus_2_Luc_Viatour.jpg" class="img-fluid" alt="">
                   </div>
                   <div class="col">
                       <div class="card-block px-2">
                           <h4 class="card-title">Jumping Fish</h4>
-                          <p class="card-text">A simple "cardiff fish". The thickness of the outline determines the visual acuity. 
-                    You should notice that the fish outline quality deteriorates for small logMAR VA (i.e., good VA).
-                    This depends on the screen quality. Note that increasing distance allows better VA to be shown. </p>
+                          <p class="card-text">A simple example of a "cardiff fish". You can change values before starting the expeirment. 
+                            The thickness of the outline is the visual acuity. You should notice that the fish outline quality deteriorates for small logMAR VA (i.e., good VA). This depends on the screen quality. Note that increasing distance allows better VA to be shown. </p>
                     <button type="button" class="btn btn-primary" onclick="StartStimulus();">Start Demonstration</button>
                       </div>
                   </div>
@@ -305,20 +311,27 @@ $( "document").ready ( function () {
           </div>
 
 
+          
+
           <div class="card shadow">
               <div class="row no-gutters">
-                  <div class="col-auto">
+                  <div class="col-auto">         
+<!--
                       <img src="img/astigmatism.jpg" class="img-fluid" alt="">
+-->            
+                      <iframe width="250" frameborder="0" src="https://www.shadertoy.com/embed/3llXzN?gui=true&t=10&paused=true&muted=false" allowfullscreen></iframe>
                   </div>
                   <div class="col">
                       <div class="card-block px-2">
                           <h4 class="card-title">Astigmatic bars</h4>
-                          <p class="card-text">Spinning bars. This is a link to shader-toy.</p>
-                    <button type="button" class="btn btn-primary" onclick="">End Demonstration</button>
+                          <p class="card-text">Moving bars demonstration. This links from <a href="https://www.shadertoy.com/view/3llXzN" target="_blank">shader-toy</a>.</p>
+                    <button type="button" class="btn btn-primary" onclick="" disabled>Start Demonstration</button>
                       </div>
                   </div>
               </div>
           </div>
+
+
 
 
       </div>
