@@ -20,7 +20,7 @@
 
 <script>
 
-const mysvg = document.querySelector('.svg');
+//const mysvg = document.querySelector('.svg');
   
 
 </script>
@@ -58,7 +58,7 @@ const mysvg = document.querySelector('.svg');
 }
 
 #fishworld {
-  overflow: hidden;
+  
 }
 
 </style>
@@ -178,8 +178,11 @@ function jumpAround () {
 
 
   function startStimulusDisplay() {
-        requestFullScreen(document.getElementById("fishworld"));
+        
+        requestFullScreen(document.documentElement); //getElementById("fishworld"));
         // toggle_visibility('displayer');        
+
+
     }
 
 
@@ -189,10 +192,12 @@ function jumpAround () {
         //gui.close();    
         //exitFullScreen(document);
 
+        gui.close (); 
+        gui.destroy ();     
+
         clearInterval (jumpingFishTimer);
         $("#main").show ();
         $("#fishworld").hide ();   
-        // gui.destroy ();     
 
   };
 
@@ -201,8 +206,6 @@ function startFishAnimation () {
 
   startStimulusDisplay();
 
-
-
   Dory = new Fish (paper);
   Dory.hide ();
   jumpAround ();
@@ -210,10 +213,13 @@ function startFishAnimation () {
 }
 
 
-  function StartStimulus () {
+/* ----------------------------------------
 
-    //EnterFullScreen ();
-    
+  CALLED ON BUTTON PRESS 
+
+ ----------------------------------------- */
+
+function StartStimulus () {
 
 
     loadConfiguration ('./config/config.default.json', function (data) { 
@@ -223,8 +229,9 @@ function startFishAnimation () {
       $("#main").hide ();
       $("#fishworld").show ();
       // gui.close ();
-      // fishMenu ();
-
+      
+      fishMenu ();
+      gui.open ();
 
 
       display = data.displayInformation;
@@ -233,8 +240,11 @@ function startFishAnimation () {
       paper = Raphael("fishworld", display.resolution.width, display.resolution.height); 
       paper.canvas.style.backgroundColor = '#7F7F7F';
 
-      console.log (display);
+      // console.log (display);
       startFishAnimation ();
+
+      // startStimulusDisplay();
+
 
     });
 
@@ -244,16 +254,17 @@ function startFishAnimation () {
 
 let animationHandle, paper;
 
+/* START MENU */
+
+
 $( "document").ready ( function () {
 
-
-  fishMenu ();      
-  gui.open ();
+  //fishMenu ();      
+  //gui.open ();
 
 
   $("#main").show ();
   $("#fishworld").hide ();
-
 
 
 
@@ -291,8 +302,10 @@ $( "document").ready ( function () {
   <div class="row" style="font-size: 10pt">
 
     <div class="col-sm-12">
-      <div class="col-sm-10">
+      <div class="col-sm-8">
 
+
+          <!-- JUMPING FISH -->
 
           <div class="card shadow">
               <div class="row no-gutters">
@@ -302,7 +315,25 @@ $( "document").ready ( function () {
                   <div class="col">
                       <div class="card-block px-2">
                           <h4 class="card-title">Jumping Fish</h4>
-                          <p class="card-text">A simple example of a "cardiff fish". You can change values using the menu on the right prior to starting the experiment. You can press the escape key to exit from the experiment - this will return you to this page. 
+                          <p class="card-text">A simple example of a "cardiff fish". The thickness of the outline is the visual acuity. You should notice that the fish outline quality deteriorates for small logMAR VA (i.e., good VA). This depends on the screen quality. Note that increasing distance allows better VA to be shown. </p>
+                    <button type="button" class="btn btn-primary" onclick="StartStimulus();">Start Demonstration</button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+
+          <!-- SINUSOIDAL GRATINGS -->
+
+          <div class="card shadow">
+              <div class="row no-gutters">
+                  <div class="col-auto">
+                      <img width="250" src="img/640px-Synchiropus_splendidus_2_Luc_Viatour.jpg" class="img-fluid" alt="">
+                  </div>
+                  <div class="col">
+                      <div class="card-block px-2">
+                          <h4 class="card-title">Sinusoidal gratings</h4>
+                          <p class="card-text">This demonstrates sinusoidal gratings. You can change values using the menu on the right prior to starting the experiment. You can press the escape key to exit from the experiment - this will return you to this page. 
                             The thickness of the outline is the visual acuity. You should notice that the fish outline quality deteriorates for small logMAR VA (i.e., good VA). This depends on the screen quality. Note that increasing distance allows better VA to be shown. </p>
                     <button type="button" class="btn btn-primary" onclick="StartStimulus();">Start Demonstration</button>
                       </div>
@@ -345,7 +376,7 @@ $( "document").ready ( function () {
  </div> 
 </div>
 
-<div width="100%" height="100%" id="fishworld"></div> 
+<div width="99%" height="99%" id="fishworld"></div> 
 
 </body>
 
