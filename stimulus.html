@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html >
+<head>
+  <meta charset="UTF-8">
+  <title>Stimulus Display</title>
+
+<!--
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.js" type="text/javascript"></script>
+-->
+
+  <!-- Bootstrap  -->
+<!--  
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/json5/0.5.1/json5.js"></script>
+-->
+
+
+
+<!--  LOCAL -->
+
+  <script type="text/javascript" src="external/jquery.min.js"></script>
+  <script type="text/javascript" src="external/popper.min.js"></script>
+  <link rel="stylesheet" href="external/bootstrap.min.css"  type="text/css">
+  <script type="text/javascript" src="external/bootstrap.min.js"></script>
+  <script type="text/javascript" src="external/json5.js"></script>
+
+  <script type="text/javascript" src="js/dat.gui.min.js"></script>
+  <script type="text/javascript" src="js/stimulus.js"></script>
+  <script type="text/javascript" src="js/Logger.js"></script>
+
+
+<!--  CSS -->
+
+  <link href="css/stimulus.css" rel="stylesheet" type="text/css">
+
+<!--
+  <script type="text/javascript" src="js/experiment.js"></script>
+-->
+
+
+
+</head>
+
+<body>
+
+
+<!-- SHADER STUFF -->
+
+<script src="js/build/three.js"></script>
+<script src="js/WebGL.js"></script>
+<script id="vertexShader" type="x-shader/x-vertex">
+</script>
+
+
+
+
+<script>
+
+$(document).ready( function () {
+
+	Logger.open();
+	Logger.hide ();
+
+    /* SETUP START BUTTON */ 
+
+    $('#start-button').click( function(e) {       
+
+        $(this).hide();		
+        openFullscreen ();
+        
+
+    });
+
+
+    /* FULL SCREEN HANDLER */ 
+
+    startFullScreenHandler (function () { 
+
+    						log("enter fullscreen"); 
+
+					        function processCallback (data) { 
+
+					        	/* runs when values change */
+
+					        	log (JSON.stringify(parameters, null, 4));
+					        	log (JSON.stringify(last_parameters, null, 4));
+
+					        	if (parameters.stimulus_type !== last_parameters.stimulus_type) {
+
+					        		/* restart the stimulus */
+
+					        		log (`changed stimulus : ${last_parameters.stimulus_type} to ${parameters.stimulus_type}`);
+					        		stimulusMenu (processCallback);
+					        		stopStimulus ();
+					        		initializeStimulus ();
+									startStimulus ();
+
+					        	}
+
+					        	last_parameters=JSON.parse(JSON.stringify(parameters));
+					        }
+
+					        /* CALL WHEN ENTERING FULL-SCREEN */
+
+							stimulusMenu (processCallback);
+							initializeStimulus ();
+							startStimulus ();
+
+							},
+
+                            function () { 
+
+                            	log("exit fullscreen");  
+
+
+                             });
+
+
+});
+    
+</script>
+
+
+<!-- PUT SOME HTML HERE -->
+
+
+
+<button id="start-button" type="button" class="btn btn-light btn-lg btn-block align">Press here to enter experiment</button>
+
+<div id="experiment">
+</div>
+
+
+
+
+
+</body>

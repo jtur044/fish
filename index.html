@@ -58,7 +58,7 @@
 }
 
 #fishworld {
-  
+  overflow: hidden
 }
 
 </style>
@@ -226,6 +226,7 @@ function StartStimulus () {
 
       console.log (data);
 
+
       $("#main").hide ();
       $("#fishworld").show ();
       // gui.close ();
@@ -234,15 +235,18 @@ function StartStimulus () {
       gui.open ();
 
 
-      display = data.displayInformation;
-      display.resolution = { width: screen.width, height: screen.height };
+      //display = data.displayInformation;
+      //display.resolution = { width: screen.width, height: screen.height };
 
-      paper = Raphael("fishworld", display.resolution.width, display.resolution.height); 
-      paper.canvas.style.backgroundColor = '#7F7F7F';
+      //paper = Raphael("fishworld", display.resolution.width, display.resolution.height); 
+      //paper.canvas.style.backgroundColor = '#7F7F7F';
 
-      // console.log (display);
-      startFishAnimation ();
+      //// console.log (display);
+      //startFishAnimation ();
 
+
+      startStimulusDisplay();
+      
       // startStimulusDisplay();
 
 
