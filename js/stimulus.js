@@ -28,16 +28,20 @@ let parameters = { 	brightness : 1.0,
 					speed : 10.0,						
 					direction : "left", 																				
 					stimulus_type : "sinusoids", 
+
+					ratio: { "2:1" : 2.0, 
+							 "1:2" : 1.5 },
+
 					bars: { frequency : 1.0,
 							contrast  : 1.0 }, 
 					sinusoids: { 	frequency : 1.0,
 									contrast  : 1.0 }, 
-					disks: { 	central_radius     	: 5,
-								surround_radius    	: 10,
+					disks: { 	logMAR     			: 1.0,
+								ratio    			: "2:1",
 								central_intensity  	: 1.0, 
 								surround_intensity 	: 0.4,
 								background_intensity : 0.5,				
-								field_spacing 		: 50 } 
+								field_spacing 		: 1.0 } 
 					};
 
 
@@ -76,7 +80,7 @@ STARTUP PARAMETERS
 
 --------------------------------------------------------------------------------- */
 
-function stimulusMenu (callback) {
+function buildMenu (callback) {
 
  if (gui) {
  	gui.destroy ();
@@ -101,27 +105,32 @@ function stimulusMenu (callback) {
 	  switch (parameters.stimulus_type) {
 
 	  	case "disks":
+
+
+		  	options.add(parameters.disks, 'logMAR',       		  0.0, 2.0).name('logMAR').onFinishChange(callback);
+		  	options.add(parameters.disks, 'ratio',        [ '2:1', '1:1' ]).name('Ratio').onFinishChange(callback);
+		  	options.add(parameters.disks, 'central_intensity',    0.0, 1.0).name('Central Intensity').onFinishChange(callback);
+		  	options.add(parameters.disks, 'surround_intensity',   0.0, 1.0).name('Surround Intensity').onFinishChange(callback);
+		  	options.add(parameters.disks, 'field_spacing',        0.0, 20.0).name('Spacing (deg)').onFinishChange(callback);
+/*
 		  	options.add(parameters.disks, 'central_radius',       0.0, 20.0).name('Central Radius').onFinishChange(callback);
 		  	options.add(parameters.disks, 'surround_radius',      0.0, 20.0).name('Surround Radius').onFinishChange(callback);
 		  	options.add(parameters.disks, 'central_intensity',    0.0, 1.0).name('Central Intensity').onFinishChange(callback);
 		  	options.add(parameters.disks, 'surround_intensity',   0.0, 1.0).name('Surround Intensity').onFinishChange(callback);
 		  	options.add(parameters.disks, 'field_spacing',        0.0, 100.0).name('Field Spacing').onFinishChange(callback);
+*/
+
 			break;
 
 	  	case "bars":
 
-/*
-		  	options.add(parameters.bars, 'contrast',     0.0, 1.0).name('Contrast').onFinishChange(callback);
-			options.add(parameters.bars, 'frequency',    0.0, 0.1).name('Spatial Freq. (cpd)').onFinishChange(callback);
-		  	break;
-*/
-
-
 	  	case "sinusoids":
+
  			options.add(parameters.sinusoids, 'contrast',  0.0, 1.0).name('Contrast').onFinishChange(callback);
 			options.add(parameters.sinusoids, 'frequency',  0.0, 15).name('Freq.(cpd)').onFinishChange(callback);
-		  	//options.add(parameters.sinusoids, 'contrast',   0.0, 1.0).name('Contrast').onFinishChange(callback);
 		  	break;
+
+
 
 		 default:
 		 	throw ('error'); 	
@@ -286,21 +295,35 @@ function initializeStimulus () {
 	let shader_frag;
 
 
+	let v;
+
 	switch (parameters.stimulus_type) {
 
 		case "disks":
 
+			let k   = parameters.ratio[parameters.disks.ratio];
+			let c   = angle2pix(display, logMAR2deg (parameters.disks.logMAR)); 
+			let s   = c * k;
+			let fsp = angle2pix(display, parameters.disks.field_spacing); 
+			v   = -direction * angle2pix(display, parameters.speed);   // px/sec 
+
+
+			//log (JSON.stringify(parameters, null, 4));
+
 			/* DISKS UNIFORM */
 			uniforms = {
-				"CentralRadius": 		{ value: parameters.disks.central_radius },
-				"PerimeterRadius": 		{ value: parameters.disks.surround_radius },
+				"CentralRadius": 		{ value: c },
+				"PerimeterRadius": 		{ value: s },
 				"CentralIntensity": 	{ value: parameters.disks.central_intensity },
 				"PerimeterIntensity": 	{ value: parameters.disks.surround_intensity },
-				"FieldSpacing": 		{ value: parameters.disks.field_spacing },
+				"FieldSpacing": 		{ value: fsp },
 				"Brightness": 			{ value: parameters.brightness },	
 				"FieldDisplacementX": 	{ value: 0.0 },
+				"Velocity": 			{ value: v },									
 					"iTime": 			{ value: 0.0 }						
 			};
+
+			// /log (JSON.stringify(uniforms, null, 4));
 
 			shader_frag = getDisksShader ();
 			break;
@@ -308,8 +331,8 @@ function initializeStimulus () {
 		case "bars":
 
 			/* DISKS UNIFORM */
-			var lambda = 1/parameters.sinusoids.frequency; 				 // cwavelength in deg 
-			var v = -direction * angle2pix(display, parameters.speed);   // deg/sec -> pixels/sec 
+			var lambda = 1/parameters.bars.frequency; 				 // cwavelength in deg 
+			v = -direction * angle2pix(display, parameters.speed);   // deg/sec -> pixels/sec 
 			var f = 1/angle2pix(display, lambda);  						 // cyc/px 
 
 			/* DISKS UNIFORM */
@@ -327,9 +350,9 @@ function initializeStimulus () {
 
 		case "sinusoids":
 
-			var lambda = 1/parameters.sinusoids.frequency; 				 // cwavelength in deg 
-			var v = -direction * angle2pix(display, parameters.speed);   // deg/sec -> pixels/sec 
-			var f = 1/angle2pix(display, lambda);  						 // cyc/px 
+			var lambda = 1/parameters.sinusoids.frequency; 				 	  // cwavelength in deg 
+			v 		   = -direction * angle2pix(display, parameters.speed);   // deg/sec -> pixels/sec 
+			var f      = 1/angle2pix(display, lambda);  					  // cyc/px 
 
 			/* DISKS UNIFORM */
 			uniforms = {
@@ -406,16 +429,25 @@ function animate() {
 
 	/* UPDATE THE CORRECT PARAMETERS */
 
+	let v;
 
 	switch (parameters.stimulus_type) {
 
 		case "disks" :
-			mesh.material.uniforms.CentralRadius.value 		= parameters.disks.central_radius;
-			mesh.material.uniforms.PerimeterRadius.value 	= parameters.disks.surround_radius; 
+
+			let k   = parameters.ratio[parameters.disks.ratio];
+			let c   = angle2pix(display, logMAR2deg (parameters.disks.logMAR)); 
+			let s   = c * k;
+			let fsp = angle2pix(display, parameters.disks.field_spacing); 
+			v   = -direction * angle2pix(display, parameters.speed);   // px/sec 
+
+			mesh.material.uniforms.CentralRadius.value 		= c; // parameters.disks.central_radius;
+			mesh.material.uniforms.PerimeterRadius.value 	= s; // parameters.disks.surround_radius; 
 			mesh.material.uniforms.CentralIntensity.value 	= parameters.disks.central_intensity; 
 			mesh.material.uniforms.PerimeterIntensity.value = parameters.disks.surround_intensity; 
-			mesh.material.uniforms.FieldSpacing.value 		= parameters.disks.field_spacing;
+			mesh.material.uniforms.FieldSpacing.value 		= fsp; 
 			mesh.material.uniforms.Brightness.value 		= parameters.brightness;
+			mesh.material.uniforms.Velocity.value 			= v;
 			break;
 
 		case "bars" :
@@ -432,8 +464,9 @@ function animate() {
 		case "sinusoids" : 
 
 			let lambda = 1/parameters.sinusoids.frequency; 		// wavelength in deg 
-			let v = -direction * parameters.speed * 1/lambda;   // cyc/sec 
 			let f = 1/angle2pix(display, lambda);  // cyc/px 
+			v = -direction * parameters.speed * 1/lambda;   // cyc/sec 
+			
 
 			mesh.material.uniforms.Contrast.value 		= parameters.sinusoids.contrast;
 			mesh.material.uniforms.Frequency.value 		= f; 
@@ -515,6 +548,7 @@ function getDisksShader () {
 "          uniform float FieldDisplacementX;"+
 "          uniform float iTime;"+
 "          uniform float Brightness;"+
+"          uniform float Velocity;"+
 
  "         const float BackgroundIntensity = 0.5;"+
  "         const float dR = 1.0;"+
@@ -526,7 +560,7 @@ function getDisksShader () {
 "          void main(void) {"+
 "          float sv;"+
 
-"          MCposition = gl_FragCoord.xy + vec2(iTime, 0.00);"+
+"          MCposition = gl_FragCoord.xy + vec2(Velocity*iTime, 0.00);"+
 "          vec2  CellLocation        = MCposition/CellSpacing;"+
 "          vec2  CellArrayID         = floor(CellLocation + vec2(0.5, 0.5));"+
 "          vec2  CellLocalLocation   = fract(CellLocation);"+

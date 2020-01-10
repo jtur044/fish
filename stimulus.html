@@ -93,11 +93,12 @@ $(document).ready( function () {
 					        		/* RESTART THE STIMULUS */
 
 					        		log (`changed stimulus : ${last_parameters.stimulus_type} to ${parameters.stimulus_type}`);
-					        		stimulusMenu (processCallback);
-					        		stopStimulus ();
+					        		
+                      buildMenu (processCallback);
+                      
+                      stopStimulus ();
 					        		initializeStimulus ();
-                      //log (`RESTART`);
-									    startStimulus ();
+              		    startStimulus ();
 
 					        	}
 
@@ -106,8 +107,9 @@ $(document).ready( function () {
 
 					    
               /* FIRST CALL  */
-							stimulusMenu (processCallback);
-							initializeStimulus ();
+							buildMenu (processCallback);
+							
+              initializeStimulus ();
 							startStimulus ();
 
 							},
