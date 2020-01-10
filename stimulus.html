@@ -62,7 +62,7 @@
 $(document).ready( function () {
 
 	Logger.open();
-	Logger.hide ();
+	//Logger.hide ();
 
     /* SETUP START BUTTON */ 
 
@@ -90,21 +90,21 @@ $(document).ready( function () {
 
 					        	if (parameters.stimulus_type !== last_parameters.stimulus_type) {
 
-					        		/* restart the stimulus */
+					        		/* RESTART THE STIMULUS */
 
 					        		log (`changed stimulus : ${last_parameters.stimulus_type} to ${parameters.stimulus_type}`);
 					        		stimulusMenu (processCallback);
 					        		stopStimulus ();
 					        		initializeStimulus ();
-									startStimulus ();
+									    startStimulus ();
 
 					        	}
 
 					        	last_parameters=JSON.parse(JSON.stringify(parameters));
 					        }
 
-					        /* CALL WHEN ENTERING FULL-SCREEN */
-
+					    
+              /* FIRST CALL  */
 							stimulusMenu (processCallback);
 							initializeStimulus ();
 							startStimulus ();

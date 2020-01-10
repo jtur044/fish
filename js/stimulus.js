@@ -20,6 +20,7 @@ let requestId;
 
 var uniforms, stamp;
 
+let isStimulusActive = false;
 
 /* PARAMETERS */
 
@@ -214,31 +215,41 @@ document.addEventListener('msfullscreenchange', function(e) { check(); }, false)
 
 function stopStimulus () {
 
-	let experiment = document.getElementById("experiment");
-	cancelAnimationFrame (requestId);
+		if (!isStimulusActive)
+			return;
 
-	if (scene == undefined) {
-			log ('stimulus stoppped - but not yet created.');
-			return
-	}
+		log ('stopped stimulus');
 
-	/* TRY TO REMOVE */
-	
-	scene.remove (mesh);
-	geometry.dispose ();
-	material.dispose ();
-	scene.dispose();
-	renderer.forceContextLoss();
-	renderer.dispose();
+		let experiment = document.getElementById("experiment");
+		cancelAnimationFrame (requestId);
 
-	/* CLEAN SLATE */
+		if (scene == undefined) {
+				log ('WARNING: stimulus stoppped - but not yet created.');
+				return
+		}
 
-	emptyChildren (experiment);
-	log ('stopped stimulus');
+		/* TRY TO REMOVE */
+		
+		scene.remove (mesh);
+		geometry.dispose ();
+		material.dispose ();
+		scene.dispose();
+		renderer.forceContextLoss();
+		renderer.dispose();
+
+		/* CLEAN SLATE */
+
+		emptyChildren (experiment);
+
+		isStimulusActive = false;
+
 }
 
 
 function startStimulus () {
+
+
+		log ("start stimulus");
 
 		count = 0;
 		
@@ -246,7 +257,8 @@ function startStimulus () {
 		stamp = (new Date()).getTime();
 		requestId = requestAnimationFrame( animate );				
 
-		log ("start stimulus");
+		isStimulusActive = true;
+
 		
 }
 
@@ -264,12 +276,12 @@ function onWindowResize() {
 
 function initializeStimulus () {
 
-	stopStimulus ();
-	experiment = document.getElementById("experiment");
-	log ("start stimulus");
+	log ("initialize stimulus");
 
-	// log (JSON.stringify(parameters,null,4));
-	// emptyChildren (experiment);
+	if (isStimulusActive)
+		stopStimulus ();
+
+	experiment = document.getElementById("experiment");
 
 	let shader_frag;
 
@@ -391,6 +403,8 @@ function animate() {
 			direction = 0.0;
 	}
 
+
+	/* UPDATE THE CORRECT PARAMETERS */
 
 
 	switch (parameters.stimulus_type) {
