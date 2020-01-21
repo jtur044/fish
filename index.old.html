@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html>
+
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+
+<script src="./js/bezier.js"></script>
+<script src="./js/fish.js"></script>
+<script src="./js/utils.js"></script>
+<script src="./js/Logger.js"></script>
+<script src="./js/utils.js"></script>
+
+<script type="text/javascript" src="./js/dat.gui.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"> </script> 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/json5/0.5.1/json5.js"></script>
+
+
+<script>
+
+//const mysvg = document.querySelector('.svg');
+  
+
+</script>
+
+
+<style>
+.carousel-inner > .item > img {
+  width: 1280px;
+}
+
+.thumbnail.right-caption > img {
+  float: left;
+  margin-right: 9px;
+}
+
+.thumbnail {
+  margin-bottom: 15px;
+}
+
+.shadow  { 
+  box-shadow: 5px 5px 5px #888888;
+  padding: 10px;
+ }
+
+.tool-title {
+  font-size: 16pt;
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+.mode-title {
+  font-size: 16pt;
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+#fishworld {
+  overflow: hidden
+}
+
+</style>
+
+
+<script> 
+
+
+let FizzyText, text, gui, Dory, display;
+
+
+function fishMenu () {
+
+  FizzyText = function() {
+
+    this.message      = 'dat.gui';  
+    this.distance     = 50; 
+    this.logMAR       = 0.5;
+    this.scale        = 1.0;
+    this.scroll_speed = 3.0;  
+    this.jump_time    = 2000;  
+    this.optotype     = 'Fish';
+    this.movement     = 'Jump';
+    this.displayOutline = false;
+  };
+
+  text  = new FizzyText();
+  gui   = new dat.GUI();
+  //pdiv.appendChild(gui.domElement);
+
+  function setValue() {
+    log ('set-value fired!');
+  }
+
+  gui.add(text, 'message');
+  gui.add(text, 'distance', 50).onChange(setValue);  
+  gui.add(text, 'optotype', [ 'Fish', 'Grating' ] ).onFinishChange(setValue);
+  gui.add(text, 'movement', [ 'Jump', 'Scroll' ] ).onFinishChange(setValue);;
+
+  gui.add(text, 'jump_time', 2000).onChange(setValue);;
+  gui.add(text, 'scroll_speed', 0.0, 10.0).onChange(setValue);;
+
+
+  var f1 = gui.addFolder('Fish options');
+  gui.add(text, 'logMAR', 0.0, 1.0).onChange(setValue);
+  gui.add(text, 'scale', 0.5, 2.0).onFinishChange(setValue);
+  f1.open();
+
+  var f2 = gui.addFolder('Grating options');
+  gui.add(text, 'logMAR', 0.0, 1.0).onChange(setValue);
+  f2.open();
+
+  gui.close ();
+
+}
+
+
+let sw = screen.width;
+let sh = screen.height;
+let points = [ [ sw/2 - sw/4, sh/2 - sh/4 ], 
+				       [ sw - sw/4, sh/2 - sh/4 ], 
+               [ sw - sw/4, sh - sh/4 ],
+               [ sw/2 - sw/4, sh - sh/4]];
+
+let index = 0;
+
+
+
+
+/* JUMP ANIMATION */
+
+
+function updateDrawing (x, y, w) {
+
+    Dory.animate({ transform: [ 't', x, y, 's', text.scale, text.scale, 0.0, 0.0  ]});
+    Dory.attr( { "inner-stroke-width": w, "outer-stroke-width": 2*w } );
+    Dory.show ();
+
+}
+
+
+let jumpingFishTimer;
+
+function jumpAround () {
+
+  index = 0;
+  let x = points[index][0];
+  let y = points[index][1];
+  let w = Math.floor (logMAR2px(display, text.logMAR));
+
+
+  /* FISH STATIC */
+  updateDrawing (-100, -100, w);
+  
+  index = 0;
+	jumpingFishTimer = setInterval ( function () {
+
+    display.distance = text.distance;
+		x = points[index][0]; y = points[index][1];
+    w = Math.floor (logMAR2px(display, text.logMAR));
+
+    /* FISH JUMP AROUND */
+    updateDrawing (x, y, w);
+
+    index += 1;
+		if (index > 3)
+			index = 0;
+
+	}, 1000);
+
+
+	return;
+
+}
+
+
+
+
+  function startStimulusDisplay() {
+        
+        requestFullScreen(document.documentElement); //getElementById("fishworld"));
+        // toggle_visibility('displayer');        
+
+
+    }
+
+
+  function stopStimulusDisplay() {
+        //toggle_visibility('displayer');
+        //StimulusRunning = false;        
+        //gui.close();    
+        //exitFullScreen(document);
+
+        gui.close (); 
+        gui.destroy ();     
+
+        clearInterval (jumpingFishTimer);
+        $("#main").show ();
+        $("#fishworld").hide ();   
+
+  };
+
+
+function startFishAnimation () {
+
+  startStimulusDisplay();
+
+  Dory = new Fish (paper);
+  Dory.hide ();
+  jumpAround ();
+
+}
+
+
+/* ----------------------------------------
+
+  CALLED ON BUTTON PRESS 
+
+ ----------------------------------------- */
+
+function StartStimulus () {
+
+
+    loadConfiguration ('./config/config.default.json', function (data) { 
+
+      console.log (data);
+
+
+      $("#main").hide ();
+      $("#fishworld").show ();
+      // gui.close ();
+      
+      fishMenu ();
+      gui.open ();
+
+
+      //display = data.displayInformation;
+      //display.resolution = { width: screen.width, height: screen.height };
+
+      //paper = Raphael("fishworld", display.resolution.width, display.resolution.height); 
+      //paper.canvas.style.backgroundColor = '#7F7F7F';
+
+      //// console.log (display);
+      //startFishAnimation ();
+
+
+      startStimulusDisplay();
+      
+      // startStimulusDisplay();
+
+
+    });
+
+  }
+
+
+
+let animationHandle, paper;
+
+
+$( "document").ready ( function () { /* start */
+
+  $("#main").show ();
+  $("#fishworld").hide ();
+
+  Logger.open ();
+
+
+  // http://jsfiddle.net/X5r8r/1156/
+
+  var showChar = 100;
+  var ellipsestext = "...";
+  var moretext = "more";
+  var lesstext = "less";
+
+
+</script> 
+
+<body>
+
+<div id="main">
+
+  <div class="container">
+  <center>
+    <h1><b><span id="title">Vision demonstrations</span></b></h1>
+    <p id="description">
+      Jason Turuwhenua
+    </p>
+  </center>
+  <br>
+
+
+  <div class="row" style="font-size: 10pt">
+
+    <div class="col-sm-12">
+      <div class="col-sm-8">
+
+
+          <!-- Drifitng sitmuliii demonstration -->
+
+          <div class="card shadow">
+              <div class="row">
+
+                <!--
+                  <div class="col-auto">
+                      <img width="150" src="img/640px-Synchiropus_splendidus_2_Luc_Viatour.jpg" class="img-fluid" alt="">
+                  </div>
+                -->
+
+                  <div class="col">
+                      <div class="card-block px-2">
+                          <h4 class="card-title">Gratings and disks</h4>
+                            <p class="text-justify">
+                              Gratings are a fundamental and important visual stimulus, typically consisting of sinusoidally varying illuminance patterns, or high contrast stripes. This demonstration allows the presentation of vertically oriented, horizontally drifting sinusoids and bars. The frequency, direction, and speed of the stimulus can be altered. This demonstration also allows presentation of arrays of vanishing disk stimuli. Each individual disk is comprised of a central disk and darker annulus, that averages out at visual threshold creating the so-called "vanishing" effect. The central disk size, annulus size and illuminances of each disk can be altered.   
+                            </p>    
+
+                            <button type="button" class="btn btn-primary btn-sm" onclick="StartStimulus();">Start</button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+
+          <!-- Preferential looking demonstration -->
+
+          <div class="card shadow">
+              <div class="row">
+
+                <!--
+                  <div class="col-auto">
+                      <img width="150" src="img/640px-Synchiropus_splendidus_2_Luc_Viatour.jpg" class="img-fluid" alt="">
+                  </div>
+                  -->
+                  <div class="col">
+                      <div class="card-block px-2">
+                          <h4 class="card-title">Preferential looking</h4>
+                          <p class="text-justify">Preferential looking refers to a vision testing paradigm whereby a suitable object such as a grating or simple picture, are shown on a region of a blank field. In standard clinical use this will be a grating or picture shown on one side of a card, and empty on the other. It is found that an observers gaze will prefer the interesting side of the stimulus rather than the empty side. Use this demonstration to explore simple preferential looking scenarios with gratings and simple pictures.
+                          </p>
+
+                          <button type="button" class="btn btn-primary btn-sm" onclick="StartStimulus();">Start</button>
+
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+          
+
+      </div>
+    </div>
+
+
+  </div>  
+ </div> 
+</div>
+
+<div width="99%" height="99%" id="fishworld"></div> 
+
+</body>
+
+
+</html>
+
+
