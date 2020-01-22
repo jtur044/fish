@@ -52,7 +52,7 @@ function buildMenu (callback) {
   gui   = new dat.GUI();
 
   gui.add(parameters, 'stimulus_type', [ 'gabor' ] ).name('Stimulus').onFinishChange(callback);
-  gui.add(parameters, 'animation', [ 'cycle', 'random' ]).name('Animation').onFinishChange(callback);
+  gui.add(parameters, 'animation', [ 'cycle', 'random', 'circle', 'rectangle' ]).name('Animation').onFinishChange(callback);
   gui.add(parameters, 'duration', 0, 10).name('Duration').onFinishChange(callback);
   gui.add(display, 	  'distance', [ 50, 70, 100, 150 ] ).name('Distance (cm)').onFinishChange(callback);
   
@@ -142,7 +142,7 @@ function initializeStimulus () {
 
 	renderer = new THREE.WebGLRenderer();
 	// renderer.setPixelRatio( window.devicePixelRatio );
-	renderer.setPixelRatio(window.devicePixelRatio ? window.devicePixelRatio : 1);
+	renderer.setPixelRatio(1); //window.devicePixelRatio ? window.devicePixelRatio : 1);
 	renderer.setSize( window.innerWidth, window.innerHeight ); 
 
 	log (window.innerWidth);
@@ -161,6 +161,7 @@ var count = 0;
 var dt = 0;
 var last = (new Date()).getTime();
 var direction = 0.0;
+var phi = 0;
 
 // var stamp = 0;
 // var fieldShiftDX = 0;
@@ -181,37 +182,87 @@ function animate() {
 
 	switch (parameters.animation) {
 
+
+
+		case "rectangle" :
+
+			  var w = window.innerWidth; h = window.innerHeight;
+
+			  phi = phi + dt;
+			  a = w/4; b = h/4;
+
+			  /* https://math.stackexchange.com/questions/1703952/polar-coordinates-vector-equation-of-a-rectangle */
+
+			  var r;
+			  var d = Math.abs(Math.tan(phi));
+			  if (d <= b/a) {
+			  	r = a/Math.abs(Math.cos(phi));
+			  } else if (d >= b/a) {
+			  	r = b/Math.abs(Math.sin(phi));
+			  }
+
+			  x = r*Math.cos(phi) + w/2;
+			  y = r*Math.sin(phi) + h/2;
+
+			 //log(`x = ${x}, y = ${y}, phi=${phi}, dt=${dt}`);
+
+
+			  uniforms.Location.value.x = x;//window.innerWidth;
+		      uniforms.Location.value.y = y;//window.innerHeight;
+
+ 		  	  last = (new Date()).getTime();
+
+			break;
+
+
+		case "circle" :
+
+
+			  var w = window.innerWidth; h = window.innerHeight;
+			  phi = Math.PI*dt/parameters.duration;
+			  var x = (w/4) * Math.sin(phi) + w/2;
+			  var y = (h/4) * Math.cos(phi) + h/2;
+
+			  uniforms.Location.value.x = x;//window.innerWidth;
+		      uniforms.Location.value.y = y;//window.innerHeight;
+
+			break;
+
+
 		case "random" :
 
-		  var x = window.innerWidth * unit_step(2*Math.Pi*parameters.duration*now);
-		  var y = window.innerWidth * unit_step(2*Math.Pi*parameters.duration*now + Math.Pi/2);
+			if (dt > parameters.duration) {
 
-	      uniforms.Location.value.x = window.innerWidth;
-	      uniforms.Location.value.y = window.innerHeight;
+				phi = 2*Math.PI*Math.random ();
+			  	var w = window.innerWidth; h = window.innerHeight;
+			  	var x = (w/4) * unit_step(phi) + w/2;
+			  	var y = (h/4) * unit_step(phi + Math.PI/2) + h/2;
 
-			//mesh.material.uniforms.Location.x.value 	 += 0.1; // parameters.disks.central_radius;
+		      	uniforms.Location.value.x = x;
+		      	uniforms.Location.value.y = y;
+
+  			  	last = (new Date()).getTime();
+
+			}
+
 			break;
 
 		case "cycle" :
 
-		  var Ax = window.innerWidth/2; Ay = window.innerHeight/2;
-		  var phi = Math.PI*dt/parameters.duration;
-		  var x = Ax * unit_step(phi) + 2*Ax;
-		  var y = Ay * unit_step(phi + Math.PI/2) + 2*Ay;
+		  var w = window.innerWidth; h = window.innerHeight;
+		  phi = Math.PI*dt/parameters.duration;
+		  var x = (w/4) * unit_step(phi) + w/2;
+		  var y = (h/4) * unit_step(phi + Math.PI/2) + h/2;
 
-		  //log(JSON.stringify(parameters,null,4));
-		  //log(`cycle phi=${phi}, x = ${x}`);
-		  //log(`cycle phi=${phi}, y = ${y}`);
-	      uniforms.Location.value.x = x;//window.innerWidth;
+		  uniforms.Location.value.x = x;//window.innerWidth;
 	      uniforms.Location.value.y = y;//window.innerHeight;
 
-			//mesh.material.uniforms.Location.x.value 	 += -0.1; // parameters.disks.central_radius;
-			break;
+		  //mesh.material.uniforms.Location.x.value 	 += -0.1; // parameters.disks.central_radius;
+		  break;
 
 	}
 
 	renderer.render( scene, camera );
-	//last = (new Date()).getTime();
 
 }
 

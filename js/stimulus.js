@@ -178,5 +178,14 @@ function emptyChildren (container) {
 
 
 function onWindowResize() {
-	renderer.setSize( window.innerWidth, window.innerHeight );
+
+  //camera.left = window.innerWidth / -2;
+  //camera.right = window.innerWidth / 2;
+  //camera.top = window.innerHeight / 2;
+  //camera.bottom = window.innerHeight / -2;
+
+  //camera.updateProjectionMatrix();
+
+  renderer.setSize( window.innerWidth, window.innerHeight );
+
 }
