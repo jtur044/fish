@@ -11,20 +11,19 @@ let camera, scene, geometry, material, renderer;
 let requestId;
 var uniforms, stamp;
 
+let dotsBuffer = [ 1200.0, 800.0, 500.0, 500.0 ];
+
 /* PARAMETERS */
 
-let parameters = { 	animation 	  : "rectangle", 																				
+let parameters = { 	animation 	  : "cycle", 																				
 					stimulus_type : "gabor", 
+					dots          : 2,
+					direction     : 2,
+					speed         : 10.0,    
 					duration      : 2.5,
 					gabor         : { frequency : 1.0,
 									  contrast  : 1.0,									
-									  sigma     : 1.0 },
-					display       : { 	name  : "custom",   
-										distance      : 100,
-										dimension  : { 	width : 50.0,
-														height: 30.0 },
-										resolution : { 	width: screen.width,
-														height: screen.height }}
+									  size      : 2 }  
 					};
 
 
@@ -60,20 +59,12 @@ function buildMenu (callback) {
   gui.add(parameters, 'stimulus_type', [ 'gabor' ] ).name('Stimulus').onFinishChange(callback);
   gui.add(parameters, 'animation', [ 'cycle', 'random', 'circle', 'rectangle' ]).name('Animation').onFinishChange(callback);
   gui.add(parameters, 'duration', 0, 10).name('Duration').onFinishChange(callback);
+  gui.add(display, 	  'distance', [ 50, 70, 100, 150 ] ).name('Distance (cm)').onFinishChange(callback);
   
 
   var options = gui.addFolder('Stimulus Options');
+
   setupMenu (options);
-
-  var display = gui.addFolder('Display Options');
-
-  display.add(parameters.display, 'name', [ 'custom' ] ).name('Type').onFinishChange(callback);
-  display.add(parameters.display, 'distance', [ 50, 70, 100, 150 ] ).name('Distance (cm)').onFinishChange(callback);
-  display.add(parameters.display.dimension, 'height').step(0.01).name('Width (cm)').onFinishChange(callback);
-  display.add(parameters.display.dimension, 'width').step(0.01).name('Height (cm)').onFinishChange(callback);
-  display.add(parameters.display.resolution, 'height').step(1).name('Width (px)').onFinishChange(callback);
-  display.add(parameters.display.resolution, 'width').step(1).name('Height (px)').onFinishChange(callback);
-
 
   function setupMenu (options) {
 
@@ -81,30 +72,15 @@ function buildMenu (callback) {
 
 	  	case "gabor":
 
- 			options.add(parameters.gabor, 'contrast',   0.0, 1.0).name('Contrast').onFinishChange(callback);
+ 			options.add(parameters.gabor, 'contrast',  0.0, 1.0).name('Contrast').onFinishChange(callback);
 			options.add(parameters.gabor, 'frequency',  0.0, 15).name('Freq.(cpd)').onFinishChange(callback);
-			options.add(parameters.gabor, 'sigma',       0.0, 5).name('Sigma (deg.)').onFinishChange(callback);
+			options.add(parameters.gabor, 'size',       0.0, 5).name('Size.(deg.)').onFinishChange(callback);
 		  	break;
 
 		 default:
 		 	throw ('error'); 	
 
 	  }
-
-
-	  switch (parameters.display.name) {
-
-	  	case "custom":
-
-		  	break;
-
-		 default:
-		 	throw ('error'); 	
-
-	  }
-
-
-
   }
 
 
@@ -139,23 +115,18 @@ function initializeStimulus () {
 		case "gabor":
 
 			/* DISKS UNIFORM */
-
-			log (`display`);
-			log (JSON.stringify(parameters.display));
-
-			var lambda = 1/parameters.gabor.frequency; 				// cwavelength in deg 
-			var f = 1/angle2pix(parameters.display, lambda);  		// cyc/px 
+			var lambda = 1/parameters.gabor.frequency; 				 // cwavelength in deg 
+			var f = 1/angle2pix(display, lambda);  						 // cyc/px 
 
 			/* DISKS UNIFORM */
 			uniforms = {
-				"Contrast": 		{ type: "f", value: 1.0 }, //parameters.sinusoids.contrast },
-				"Frequency": 		{ type: "f", value: f },
-				"Sigma": 		    { type: "f", value: angle2pix(parameters.display, 1.0) },
-				"Location": 		{ type: "v2", value: new THREE.Vector2() },						
+				"dot_radius": 		{ value: 10.0 },
+				//"pts": 				{ type: "v2v", value: [ new THREE.Vector2(1200.0, 800.0), new THREE.Vector2(500.0, 500.0) ] }
+				"pts": 				{ type: "2fv", value: dotsBuffer }
 			};
 
 
-			shader_frag = getGaborShader ();
+			shader_frag = getDotsShader (2);
 			break;
 
 	}
@@ -187,40 +158,7 @@ function initializeStimulus () {
 	onWindowResize();
 	window.addEventListener( 'resize', onWindowResize, false );
 
-	updateStimulus ();
-
 }
-
-
-function updateStimulus () {
-
-	switch (parameters.stimulus_type) {
-
-		case "gabor":
-
-			/* DISKS UNIFORM */
-			var lambda = 1/parameters.gabor.frequency; 				 // cwavelength in deg 
-			var f = 1/angle2pix(parameters.display, lambda);  		 // cyc/px 
-			var s = angle2pix(parameters.display, parameters.gabor.sigma);  		 // cyc/px 
-
-			/* DISKS UNIFORM */
-
-			//uniforms = {
-			//	"Contrast": 		{ type: "f", value: parameters.gabor.contrast }, //parameters.sinusoids.contrast },
-			//	"Frequency": 		{ type: "f", value: parameters.gabor.frequency },
-			//};
-
-
-			//log(`frequency () = ${f}, lambda = ${lambda}, sigma = ${s}`)
-
-			uniforms.Contrast.value  = parameters.gabor.contrast;
-			uniforms.Frequency.value = f;
-			uniforms.Sigma.value = s;			
-			break;
-	}
-
-}
-
 
 //
 
@@ -242,14 +180,16 @@ function animate() {
 
 	requestId = requestAnimationFrame( animate );
 	
-	let now 		= (new Date()).getTime();
-	let elapsedTime = (now - last)/1000; // seconds 
-	let T    		= parameters.duration;
-	let phi  		= 2*Math.PI*elapsedTime/T;
-
-	var w = window.innerWidth; h = window.innerHeight;
+	let now = (new Date()).getTime();
+	let dt = (now - last)/1000; // seconds 
 
 	/* UPDATE THE POSITIONING */
+
+	dotsBuffer[0] += 0.5;
+	uniforms.pts.value = dotsBuffer;
+
+	//"pts": 				{ type: "2fv", value: [ 1200.0, 800.0, 500.0, 500.0 ] }
+
 
 	switch (parameters.animation) {
 
@@ -257,8 +197,9 @@ function animate() {
 
 		case "rectangle" :
 
+			  var w = window.innerWidth; h = window.innerHeight;
 
-
+			  phi = phi + dt;
 			  a = w/4; b = h/4;
 
 			  /* https://math.stackexchange.com/questions/1703952/polar-coordinates-vector-equation-of-a-rectangle */
@@ -276,39 +217,40 @@ function animate() {
 
 			 //log(`x = ${x}, y = ${y}, phi=${phi}, dt=${dt}`);
 
-			 //console.log (uniforms);
 
+			  //uniforms.Location.value.x = x;//window.innerWidth;
+		      //uniforms.Location.value.y = y;//window.innerHeight;
 
-			  uniforms.Location.value.x = x;//window.innerWidth;
-		      uniforms.Location.value.y = y;//window.innerHeight;
-
- 		  	  //last = (new Date()).getTime();
+ 		  	  last = (new Date()).getTime();
 
 			break;
 
 
 		case "circle" :
-			  
+
+
+			  var w = window.innerWidth; h = window.innerHeight;
+			  phi = Math.PI*dt/parameters.duration;
 			  var x = (w/4) * Math.sin(phi) + w/2;
 			  var y = (h/4) * Math.cos(phi) + h/2;
 
-			  uniforms.Location.value.x = x;//window.innerWidth;
-		      uniforms.Location.value.y = y;//window.innerHeight;
+			  //uniforms.Location.value.x = x;//window.innerWidth;
+		      //uniforms.Location.value.y = y;//window.innerHeight;
 
 			break;
 
 
 		case "random" :
 
-			if (elapsedTime > T) {
+			if (dt > parameters.duration) {
 
 				phi = 2*Math.PI*Math.random ();
-
+			  	var w = window.innerWidth; h = window.innerHeight;
 			  	var x = (w/4) * unit_step(phi) + w/2;
 			  	var y = (h/4) * unit_step(phi + Math.PI/2) + h/2;
 
-		      	uniforms.Location.value.x = x;
-		      	uniforms.Location.value.y = y;
+		      	//uniforms.Location.value.x = x;
+		      	//uniforms.Location.value.y = y;
 
   			  	last = (new Date()).getTime();
 
@@ -318,11 +260,13 @@ function animate() {
 
 		case "cycle" :
 
+		  var w = window.innerWidth; h = window.innerHeight;
+		  phi = Math.PI*dt/parameters.duration;
 		  var x = (w/4) * unit_step(phi) + w/2;
 		  var y = (h/4) * unit_step(phi + Math.PI/2) + h/2;
 
-		  uniforms.Location.value.x = x;//window.innerWidth;
-	      uniforms.Location.value.y = y;//window.innerHeight;
+		  //uniforms.Location.value.x = x;//window.innerWidth;
+	      //uniforms.Location.value.y = y;//window.innerHeight;
 
 		  //mesh.material.uniforms.Location.x.value 	 += -0.1; // parameters.disks.central_radius;
 		  break;
@@ -344,37 +288,39 @@ EMPTY SHADER
 -------------------------------------------------------------------------------------------------------------------------------------- */
 
 
-function getGaborShader () {
-
+function getDotsShader (N) {
 
 let shader_frag = 
 
 "		  const float Pi = 3.1415927;"+
 "	      const float BackgroundIntensity = 0.5;"+
 
-"		  uniform float Contrast;"+
-"		  uniform float Frequency;"+  
-"		  uniform float Sigma;"+  
-"		  uniform vec2 Location;"+  
+"		  uniform float dot_radius;"+  
+`		  uniform vec2  pts[${N}];`+  
 
-//"		 float gauss(float x) {" +
-//"    		return exp(-(x*x)*20.);" + 
-//"		 }"+
+"		  float gauss(float x) {" +
+"    		return exp(-x*x*0.0001);" + 
+"		  }"+
 
 
-"		 float gauss(float x, float s) {" +
-"    		return exp(-x*x/(2.0*s*s));" + 
-"		 }"+
+"		  float puck(float x, float r) {" +
+"    		return 1.0-smoothstep(r-0.1, r+0.1, x);"+ 
+"		  }"+
 
 "         void main(void) {"+
-"		  vec2  uv  = gl_FragCoord.xy;"+
-"		  float g = gauss(uv.x - Location.x, Sigma)*gauss(uv.y - Location.y, Sigma);"+
-// "		  float sv = g*(0.5*Contrast)*( sin (2.0*Pi*Frequency*uv.x) ) + BackgroundIntensity;"+     
-"		  float sv = g*(0.5*Contrast)*( sin (2.0*Pi*Frequency*(uv.x - Location.x))) + BackgroundIntensity;"+     
-//"		  float sv = 0.5*g + BackgroundIntensity;"+     
+"			float sv = 0.0;"+
+"			float d  = 0.0;"+
+"	  	    vec2  uv  = gl_FragCoord.xy;"+
+"	        float g = 0.0;"+
 
-"		  float b = 1.0;"+
-"		  gl_FragColor = vec4(b*sv, b*sv, b*sv, 1.0);"+
+`		    for(int i=0;i<${N};i++){`+
+"				d = distance(uv, pts[i]);"+
+"	  	    	sv += puck(d, dot_radius);"+
+"	        }"+
+
+"			sv = clamp(sv, 0.0, BackgroundIntensity) + BackgroundIntensity;"+
+"		    float b = 1.0;"+
+"		    gl_FragColor = vec4(b*sv, b*sv, b*sv, 1.0);"+
 "		  }";
 
 return shader_frag;
