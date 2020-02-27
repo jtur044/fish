@@ -6,6 +6,81 @@ This will allow sinusoids, stripes, disks
  ----------------------------------------------------------------- */
 
 
+
+/* accepts parameters
+ * h  Object = {h:x, s:y, v:z}
+ * OR 
+ * h, s, v
+*/
+function HSVtoRGB(h, s, v) {
+
+    var r, g, b, i, f, p, q, t;
+    if (arguments.length === 1) {
+        s = h.s, v = h.v, h = h.h;
+    }
+
+    i = Math.floor(h * 6);
+    f = h * 6 - i;
+    p = v * (1 - s);
+    q = v * (1 - f * s);
+    t = v * (1 - (1 - f) * s);
+    switch (i % 6) {
+        case 0: r = v, g = t, b = p; break;
+        case 1: r = q, g = v, b = p; break;
+        case 2: r = p, g = v, b = t; break;
+        case 3: r = p, g = q, b = v; break;
+        case 4: r = t, g = p, b = v; break;
+        case 5: r = v, g = p, b = q; break;
+    }
+    return {
+        r: Math.round(r * 255) / 255,
+        g: Math.round(g * 255) / 255,
+        b: Math.round(b * 255) / 255
+    };
+}
+
+
+function RGBtoHSV (r, g, b) {
+    let rabs, gabs, babs, rr, gg, bb, h, s, v, diff, diffc, percentRoundFn;
+
+    rabs = r; // / 255;
+    gabs = g; // / 255;
+    babs = b; // / 255;
+    v = Math.max(rabs, gabs, babs),
+    diff = v - Math.min(rabs, gabs, babs);
+    diffc = c => (v - c) / 6 / diff + 1 / 2;
+    percentRoundFn = num => Math.round(num * 100) / 100;
+    if (diff == 0) {
+        h = s = 0;
+    } else {
+        s = diff / v;
+        rr = diffc(rabs);
+        gg = diffc(gabs);
+        bb = diffc(babs);
+
+        if (rabs === v) {
+            h = bb - gg;
+        } else if (gabs === v) {
+            h = (1 / 3) + rr - bb;
+        } else if (babs === v) {
+            h = (2 / 3) + gg - rr;
+        }
+        if (h < 0) {
+            h += 1;
+        }else if (h > 1) {
+            h -= 1;
+        }
+    }
+    return {
+        h: Math.round(h * 360),
+        s: percentRoundFn(s * 100) / 100,
+        v: percentRoundFn(v * 100) / 100
+    };
+}
+
+
+
+
 let FizzyText, gui;
 let camera, scene, geometry, material, renderer;
 let requestId;
@@ -24,7 +99,18 @@ let parameters = { 	animation 	  : "rectangle",
 										dimension  : { 	width : 50.0,
 														height: 30.0 },
 										resolution : { 	width: screen.width,
-														height: screen.height }}
+														height: screen.height }},
+					color         : { 	hsv : RGBtoHSV(1.0, 1.0, 1.0), 
+										rgb : { r: 1.0, g: 1.0, b: 1.0 },
+
+										reset: function() {  
+												 parameters.color.hsv = RGBtoHSV(1.0, 1.0, 1.0); 
+												 parameters.color.rgb = { r: 1.0, g: 1.0, b: 1.0 };
+												 updateStimulus ();  }
+
+										}
+
+
 					};
 
 
@@ -60,7 +146,7 @@ function buildMenu (callback) {
   gui.add(parameters, 'stimulus_type', [ 'gabor' ] ).name('Stimulus').onFinishChange(callback);
   gui.add(parameters, 'animation', [ 'cycle', 'random', 'circle', 'rectangle' ]).name('Animation').onFinishChange(callback);
   gui.add(parameters, 'duration', 0, 10).name('Duration').onFinishChange(callback);
-  
+ 
 
   var options = gui.addFolder('Stimulus Options');
   setupMenu (options);
@@ -73,6 +159,9 @@ function buildMenu (callback) {
   display.add(parameters.display.dimension, 'width').step(0.01).name('Height (cm)').onFinishChange(callback);
   display.add(parameters.display.resolution, 'height').step(1).name('Width (px)').onFinishChange(callback);
   display.add(parameters.display.resolution, 'width').step(1).name('Height (px)').onFinishChange(callback);
+
+  gui.addColor(parameters.color, 'hsv').name('Color').onFinishChange(callback).listen();
+  gui.add(parameters.color, 'reset').name('Reset Color').onFinishChange(callback);
 
 
   function setupMenu (options) {
@@ -117,7 +206,6 @@ function buildMenu (callback) {
 
 
 
-
 //----DISK Functions Begin----
 
 
@@ -151,7 +239,8 @@ function initializeStimulus () {
 				"Contrast": 		{ type: "f", value: 1.0 }, //parameters.sinusoids.contrast },
 				"Frequency": 		{ type: "f", value: f },
 				"Sigma": 		    { type: "f", value: angle2pix(parameters.display, 1.0) },
-				"Location": 		{ type: "v2", value: new THREE.Vector2() },						
+				"Location": 		{ type: "v2", value: new THREE.Vector2() },		
+				"Color": 			{ type: "v3", value: new THREE.Color() },										
 			};
 
 
@@ -164,12 +253,12 @@ function initializeStimulus () {
 	camera 		= new THREE.OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );				
 	scene 		= new THREE.Scene();
 	geometry 	= new THREE.PlaneBufferGeometry( 2, 2 );
-
-
-	material = new THREE.ShaderMaterial( {
-		uniforms: uniforms,
-		fragmentShader: shader_frag  
-	} );
+	material    = new THREE.ShaderMaterial( {
+	
+			uniforms: uniforms,
+			fragmentShader: shader_frag  
+	
+	});
 
 	mesh = new THREE.Mesh( geometry, material );
 	scene.add( mesh );
@@ -199,23 +288,22 @@ function updateStimulus () {
 		case "gabor":
 
 			/* DISKS UNIFORM */
+
 			var lambda = 1/parameters.gabor.frequency; 				 // cwavelength in deg 
 			var f = 1/angle2pix(parameters.display, lambda);  		 // cyc/px 
 			var s = angle2pix(parameters.display, parameters.gabor.sigma);  		 // cyc/px 
 
 			/* DISKS UNIFORM */
+			
+			let h = {...parameters.color.hsv};
 
-			//uniforms = {
-			//	"Contrast": 		{ type: "f", value: parameters.gabor.contrast }, //parameters.sinusoids.contrast },
-			//	"Frequency": 		{ type: "f", value: parameters.gabor.frequency },
-			//};
-
-
-			//log(`frequency () = ${f}, lambda = ${lambda}, sigma = ${s}`)
-
+			parameters.color.rgb     = HSVtoRGB(h.h/360, h.s, h.v);
 			uniforms.Contrast.value  = parameters.gabor.contrast;
 			uniforms.Frequency.value = f;
-			uniforms.Sigma.value = s;			
+			uniforms.Sigma.value     = s;			
+			uniforms.Color.value.r   = parameters.color.rgb.r;
+			uniforms.Color.value.g   = parameters.color.rgb.g;
+			uniforms.Color.value.b   = parameters.color.rgb.b;
 			break;
 	}
 
@@ -356,6 +444,7 @@ let shader_frag =
 "		  uniform float Frequency;"+  
 "		  uniform float Sigma;"+  
 "		  uniform vec2 Location;"+  
+"		  uniform vec3 Color;"+  
 
 //"		 float gauss(float x) {" +
 //"    		return exp(-(x*x)*20.);" + 
@@ -374,7 +463,7 @@ let shader_frag =
 //"		  float sv = 0.5*g + BackgroundIntensity;"+     
 
 "		  float b = 1.0;"+
-"		  gl_FragColor = vec4(b*sv, b*sv, b*sv, 1.0);"+
+"		  gl_FragColor = vec4(Color.r*sv, Color.g*sv, Color.b*sv, 1.0);"+
 "		  }";
 
 return shader_frag;
