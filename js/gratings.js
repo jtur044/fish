@@ -19,7 +19,7 @@ var uniforms, stamp;
 let parameters = { 	brightness : 1.0,					
 					speed : 10.0,						
 					direction : "left", 																				
-					stimulus_type : "sinusoids", 
+					stimulus_type : "disks", 
 
 					ratio: { "2:1" : 2.0, 
 							 "1:2" : 1.5 },
