@@ -82,8 +82,8 @@ $(document).ready( function () {
 
 					        function processCallback (data) {  /* called when menu values change */
 					        	
-					        	log (JSON.stringify(parameters, null, 4));
-					        	log (JSON.stringify(last_parameters, null, 4));
+					        	//log (JSON.stringify(parameters, null, 4));
+					        	//log (JSON.stringify(last_parameters, null, 4));
 
 					        	if (parameters.stimulus_type !== last_parameters.stimulus_type) {
 
@@ -111,7 +111,7 @@ $(document).ready( function () {
 
               function () { /* exit fullscreen */
 
-              	  log("exit fullscreen");  
+              	  //log("exit fullscreen");  
                   stopStimulus ();
                   destroyMenu ();
 
