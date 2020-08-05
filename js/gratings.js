@@ -17,19 +17,19 @@ var uniforms, stamp;
 /* PARAMETERS */
 
 let parameters = { 	brightness : 1.0,					
-					speed : 10.0,						
+					speed : 3.0,						
 					direction : "left", 																				
 					stimulus_type : "disks", 
 
-					ratio: { "2:1" : 2.0, 
-							 "1:2" : 1.5 },
+					ratio: { "1:2.0" : 2.0, 
+							 "1:1.5" : 1.5 },
 
 					bars: { frequency : 1.0,
 							contrast  : 1.0 }, 
 					sinusoids: { 	frequency : 1.0,
 									contrast  : 1.0 }, 
 					disks: { 	logMAR     			: 1.0,
-								ratio    			: "2:1",
+								ratio    			: "1:2.0",
 								central_intensity  	: 1.0, 
 								surround_intensity 	: 0.4,
 								background_intensity : 0.5,				
@@ -116,7 +116,7 @@ function buildMenu (callback) {
 
 
 		  	options.add(parameters.disks, 'logMAR',       		  0.0, 2.0).name('logMAR').onFinishChange(callback);
-		  	options.add(parameters.disks, 'ratio',        [ '2:1', '1:1' ]).name('Ratio').onFinishChange(callback);
+		  	options.add(parameters.disks, 'ratio',        [ '1:1.5', '1:2' ]).name('Ratio').onFinishChange(callback);
 		  	options.add(parameters.disks, 'central_intensity',    0.0, 1.0).name('Central Intensity').onFinishChange(callback);
 		  	options.add(parameters.disks, 'surround_intensity',   0.0, 1.0).name('Surround Intensity').onFinishChange(callback);
 		  	options.add(parameters.disks, 'field_spacing',        0.0, 10.0).name('Spacing (deg)').onFinishChange(callback);
