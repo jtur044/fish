@@ -21,7 +21,7 @@ let parameters = { 	brightness : 1.0,
 					direction : "left", 																				
 					stimulus_type : "disks", 
 
-					ratio: { "1:2.0" : 2.0, 
+					ratio: { "1:2"   : 2.0, 
 							 "1:1.5" : 1.5 },
 
 					bars: { frequency : 1.0,
@@ -29,7 +29,7 @@ let parameters = { 	brightness : 1.0,
 					sinusoids: { 	frequency : 1.0,
 									contrast  : 1.0 }, 
 					disks: { 	logMAR     			: 1.0,
-								ratio    			: "1:2.0",
+								ratio    			: "1:2",
 								central_intensity  	: 1.0, 
 								surround_intensity 	: 0.4,
 								background_intensity : 0.5,				
@@ -115,7 +115,7 @@ function buildMenu (callback) {
 	  	case "disks":
 
 
-		  	options.add(parameters.disks, 'logMAR',       		  0.0, 2.0).name('logMAR').onFinishChange(callback);
+		  	options.add(parameters.disks, 'logMAR',       		  0.0, 2.0, 0.1).name('logMAR').onFinishChange(callback);
 		  	options.add(parameters.disks, 'ratio',        [ '1:1.5', '1:2' ]).name('Ratio').onFinishChange(callback);
 		  	options.add(parameters.disks, 'central_intensity',    0.0, 1.0).name('Central Intensity').onFinishChange(callback);
 		  	options.add(parameters.disks, 'surround_intensity',   0.0, 1.0).name('Surround Intensity').onFinishChange(callback);
