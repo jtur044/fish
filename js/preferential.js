@@ -101,10 +101,12 @@ let parameters = { 	animation 	  : "rectangle",
 														height: 30.0 },
 										resolution : { 	width: screen.width,
 														height: screen.height }},
-					color         : { 	rgb : { r: 1.0, g: 1.0, b: 1.0 },
+					color         : { 	rgb : { r: 0.5, g: 0.5, b: 0.5 },
+										window    : "step",
+										threshold : 3,
 
 										reset: function() {  
-											 parameters.color.rgb = { r: 1.0, g: 1.0, b: 1.0 };
+											 parameters.color.rgb = { r: 0.5, g: 0.5, b: 0.5 };
 											 updateStimulus ();  }
 
 										}
@@ -152,10 +154,10 @@ function buildMenu (callback) {
 
 
   var color_options = gui.addFolder('Color Options');
-  color_options.add(parameters.color.rgb, 'r', 0, 1).step(0.001).name('Red').onFinishChange(callback);
-  color_options.add(parameters.color.rgb, 'g', 0, 1).step(0.001).name('Green').onFinishChange(callback);
-  color_options.add(parameters.color.rgb, 'b', 0, 1).step(0.001).name('Blue').onFinishChange(callback);
-
+  //color_options.add(parameters.color, 'threshold', 0, 3).name('Threshold').onFinishChange(callback).listen();
+  color_options.add(parameters.color.rgb, 'r', -0.5, 0.5).step(0.001).name('Red').onFinishChange(callback).listen();
+  color_options.add(parameters.color.rgb, 'g', -0.5, 0.5).step(0.001).name('Green').onFinishChange(callback).listen();
+  color_options.add(parameters.color.rgb, 'b', -0.5, 0.5).step(0.001).name('Blue').onFinishChange(callback).listen();
 
   var display = gui.addFolder('Display Options');
 
@@ -207,6 +209,8 @@ function buildMenu (callback) {
   //options.add(parameters.bars, 'frequency', 0.0, 1.0).name('Frequency').onFinishChange(callback);
   //options.add(parameters.bars, 'direction', [ 'left', 'right' ]).name('Direction').onFinishChange(callback);
   options.open();
+  color_options.open();
+
 
 }
 
@@ -319,46 +323,47 @@ function updateStimulus () {
 	}
 
 
+	console.log (`method = ${parameters.stimulus_type}`);
+
+
 	/* color preset */
 
 	switch (parameters.color_preset) {
 
 		case "achromatic (+)":
-			parameters.color.rgb.r = 0.5 + 0.15;
-			parameters.color.rgb.g = 0.5 + 0.15;
-			parameters.color.rgb.b = 0.5 + 0.15;			
-			console.log ('1');
+			parameters.color.rgb.r = 0.15;
+			parameters.color.rgb.g = 0.15;
+			parameters.color.rgb.b = 0.15;			
 			break;
 
 		case "achromatic (-)":
-			parameters.color.rgb.r = 0.5 - 0.15;
-			parameters.color.rgb.g = 0.5 - 0.15;
-			parameters.color.rgb.b = 0.5 - 0.15;						
-			console.log ('2');
+			parameters.color.rgb.r = - 0.15;
+			parameters.color.rgb.g = - 0.15;
+			parameters.color.rgb.b = - 0.15;						
 			break;
 
 		case "S not L (+)":
-			parameters.color.rgb.r = 0.5 + 0.50;
-			parameters.color.rgb.g = 0.5 - 0.09;
-			parameters.color.rgb.b = 0.5 + 0.152;			
+			parameters.color.rgb.r = +0.50;
+			parameters.color.rgb.g = -0.09;
+			parameters.color.rgb.b = +0.152;			
 			break;
 
 		case "S not L (-)":
-			parameters.color.rgb.r = 0.5 - 0.50;
-			parameters.color.rgb.g = 0.5 + 0.09;
-			parameters.color.rgb.b = 0.5 - 0.152;						
+			parameters.color.rgb.r = -0.50;
+			parameters.color.rgb.g = +0.09;
+			parameters.color.rgb.b = -0.152;						
+			break;
+
+		case "L not S (+)":
+			parameters.color.rgb.r = +0.50;
+			parameters.color.rgb.g = +0.168;
+			parameters.color.rgb.b = -0.002;			
 			break;
 
 		case "L not S (-)":
-			parameters.color.rgb.r = 0.5 + 0.50;
-			parameters.color.rgb.g = 0.5 + 0.168;
-			parameters.color.rgb.b = 0.5 - 0.002;			
-			break;
-
-		case "L not S (-)":
-			parameters.color.rgb.r = 0.5 - 0.50;
-			parameters.color.rgb.g = 0.5 - 0.168;
-			parameters.color.rgb.b = 0.5 + 0.002;			
+			parameters.color.rgb.r = -0.50;
+			parameters.color.rgb.g = -0.168;
+			parameters.color.rgb.b = +0.002;			
 			break;
 
 		case "custom":
@@ -367,7 +372,7 @@ function updateStimulus () {
 	}
 
 
-	console.log (parameters);
+	console.log (`method = ${parameters.color_reset}`);
 
 	uniforms.Color.value.r   = parameters.color.rgb.r;
 	uniforms.Color.value.g   = parameters.color.rgb.g;
@@ -505,7 +510,7 @@ function getGaborShader () {
 let shader_frag = 
 
 "		  const float Pi = 3.1415927;"+
-"	      const float BackgroundIntensity = 0.5;"+
+"	      const float bi = 0.5;"+
 
 "		  uniform float Contrast;"+
 "		  uniform float Frequency;"+  
@@ -526,11 +531,13 @@ let shader_frag =
 "		  vec2  uv  = gl_FragCoord.xy;"+
 "		  float g = gauss(uv.x - Location.x, Sigma)*gauss(uv.y - Location.y, Sigma);"+
 // "		  float sv = g*(0.5*Contrast)*( sin (2.0*Pi*Frequency*uv.x) ) + BackgroundIntensity;"+     
-"		  float sv = g*(0.5*Contrast)*( cos (2.0*Pi*Frequency*(uv.x - Location.x))) + BackgroundIntensity;"+     
+"		  float sv = g*(0.5*Contrast)*( cos (2.0*Pi*Frequency*(uv.x - Location.x)));"+     
 //"		  float sv = 0.5*g + BackgroundIntensity;"+     
 
-"		  float b = 1.0;"+
-"		  gl_FragColor = vec4(Color.r*sv, Color.g*sv, Color.b*sv, 1.0);"+
+"		  float dr = Color.r;"+
+"		  float dg = Color.g;"+
+"		  float db = Color.b;"+
+"		  gl_FragColor = vec4(dr*sv + bi, dg*sv + bi, db*sv + bi, 1.0);"+
 "		  }";
 
 return shader_frag;
