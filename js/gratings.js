@@ -104,10 +104,10 @@ function buildMenu (callback) {
   gui.add(parameters, 'brightness', 0.0, 1.0).name('Brightness').onFinishChange(callback);  
 
 
+  /* stimulus options */
+
   var options = gui.addFolder('Stimulus Options');
-
   setupMenu (options);
-
   function setupMenu (options) {
 
 	  switch (parameters.stimulus_type) {
@@ -117,8 +117,8 @@ function buildMenu (callback) {
 
 		  	options.add(parameters.disks, 'logMAR',       		  0.0, 2.0, 0.1).name('logMAR').onFinishChange(callback);
 		  	options.add(parameters.disks, 'ratio',        [ '1:1.5', '1:2' ]).name('Ratio').onFinishChange(callback);
-		  	options.add(parameters.disks, 'central_intensity',    0.0, 1.0).name('Central Intensity').onFinishChange(callback);
-		  	options.add(parameters.disks, 'surround_intensity',   0.0, 1.0).name('Surround Intensity').onFinishChange(callback);
+		  	options.add(parameters.disks, 'central_intensity',    0.0, 1.0, 0.05).name('Central Intensity').onFinishChange(callback);
+		  	options.add(parameters.disks, 'surround_intensity',   0.0, 1.0, 0.05).name('Surround Intensity').onFinishChange(callback);
 		  	options.add(parameters.disks, 'field_spacing',        0.0, 10.0).name('Spacing (deg)').onFinishChange(callback);
 /*
 		  	options.add(parameters.disks, 'central_radius',       0.0, 20.0).name('Central Radius').onFinishChange(callback);
@@ -145,13 +145,20 @@ function buildMenu (callback) {
 
 	  }
   }
-
-
-
-  //options.add(parameters.bars, 'speed', 0.0, 1.0).name('Speed').onFinishChange(callback);
-  //options.add(parameters.bars, 'frequency', 0.0, 1.0).name('Frequency').onFinishChange(callback);
-  //options.add(parameters.bars, 'direction', [ 'left', 'right' ]).name('Direction').onFinishChange(callback);
   options.open();
+
+
+  /* display options */
+
+  //console.log (display);
+
+  var display_options = gui.addFolder('Display Options');
+  display_options.add(display.dimension,   'width', 51.50).name('width (cm)').onFinishChange(callback);
+  display_options.add(display.dimension,  'height', 32.50).name('height (cm)').onFinishChange(callback);
+  display_options.add(display.resolution,  'width', 1920).name('width (px)').onFinishChange(callback);
+  display_options.add(display.resolution, 'height', 1200).name('height (px)').onFinishChange(callback);
+  display_options.close();
+
 
 }
 
