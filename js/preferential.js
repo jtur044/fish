@@ -372,7 +372,7 @@ function updateStimulus () {
 	}
 
 
-	console.log (`method = ${parameters.color_reset}`);
+	console.log (`method = ${parameters.color_preset}`);
 
 	uniforms.Color.value.r   = parameters.color.rgb.r;
 	uniforms.Color.value.g   = parameters.color.rgb.g;
