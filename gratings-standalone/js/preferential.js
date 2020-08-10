@@ -90,7 +90,6 @@ var uniforms, stamp;
 
 let parameters = { 	animation 	  : "rectangle", 																				
 					stimulus_type : "gabor", 
-					color_preset  : "custom", 					
 					duration      : 2.5,
 					gabor         : { frequency : 1.0,
 									  contrast  : 1.0,									
@@ -101,13 +100,13 @@ let parameters = { 	animation 	  : "rectangle",
 														height: 30.0 },
 										resolution : { 	width: screen.width,
 														height: screen.height }},
-					color         : { 	rgb : { r: 0.5, g: 0.5, b: 0.5 },
-										window    : "step",
-										threshold : 3,
+					color         : { 	hsv : RGBtoHSV(1.0, 1.0, 1.0), 
+										rgb : { r: 1.0, g: 1.0, b: 1.0 },
 
 										reset: function() {  
-											 parameters.color.rgb = { r: 0.5, g: 0.5, b: 0.5 };
-											 updateStimulus ();  }
+												 parameters.color.hsv = RGBtoHSV(1.0, 1.0, 1.0); 
+												 parameters.color.rgb = { r: 1.0, g: 1.0, b: 1.0 };
+												 updateStimulus ();  }
 
 										}
 
@@ -145,19 +144,12 @@ function buildMenu (callback) {
   gui   = new dat.GUI();
 
   gui.add(parameters, 'stimulus_type', [ 'gabor' ] ).name('Stimulus').onFinishChange(callback);
-  gui.add(parameters, 'color_preset', [ 'achromatic (+)', 'achromatic (-)', 'S not L (+)', 'S not L (-)', 'L not S (+)', 'L not S (-)', 'custom' ]).name('Color Preset').onFinishChange(callback);
   gui.add(parameters, 'animation', [ 'cycle', 'random', 'circle', 'rectangle' ]).name('Animation').onFinishChange(callback);
   gui.add(parameters, 'duration', 0, 10).name('Duration').onFinishChange(callback);
+ 
 
   var options = gui.addFolder('Stimulus Options');
   setupMenu (options);
-
-
-  var color_options = gui.addFolder('Color Options');
-  //color_options.add(parameters.color, 'threshold', 0, 3).name('Threshold').onFinishChange(callback).listen();
-  color_options.add(parameters.color.rgb, 'r', -0.5, 0.5).step(0.001).name('Red').onFinishChange(callback).listen();
-  color_options.add(parameters.color.rgb, 'g', -0.5, 0.5).step(0.001).name('Green').onFinishChange(callback).listen();
-  color_options.add(parameters.color.rgb, 'b', -0.5, 0.5).step(0.001).name('Blue').onFinishChange(callback).listen();
 
   var display = gui.addFolder('Display Options');
 
@@ -168,8 +160,8 @@ function buildMenu (callback) {
   display.add(parameters.display.resolution, 'height').step(1).name('Width (px)').onFinishChange(callback);
   display.add(parameters.display.resolution, 'width').step(1).name('Height (px)').onFinishChange(callback);
 
-  //gui.addColor(parameters.color, 'rgb').name('Color').onFinishChange(callback).listen();
-  //gui.add(parameters.color, 'reset').name('Reset Color').onFinishChange(callback);
+  gui.addColor(parameters.color, 'hsv').name('Color').onFinishChange(callback).listen();
+  gui.add(parameters.color, 'reset').name('Reset Color').onFinishChange(callback);
 
 
   function setupMenu (options) {
@@ -209,8 +201,6 @@ function buildMenu (callback) {
   //options.add(parameters.bars, 'frequency', 0.0, 1.0).name('Frequency').onFinishChange(callback);
   //options.add(parameters.bars, 'direction', [ 'left', 'right' ]).name('Direction').onFinishChange(callback);
   options.open();
-  color_options.open();
-
 
 }
 
@@ -293,91 +283,29 @@ function initializeStimulus () {
 
 function updateStimulus () {
 
-
-	/* stimulus type */
-
 	switch (parameters.stimulus_type) {
 
 		case "gabor":
 
-			/* disks uniform  */
+			/* DISKS UNIFORM */
 
-			var f, lambda;
-			if (parameters.gabor.frequency > 0) {
-				lambda = 1/parameters.gabor.frequency; 				 // cwavelength in deg 
-				f = 1/angle2pix(parameters.display, lambda);  		 // cyc/px 				
-			} else {
-				lambda = 0;
-				f = 0;
-			}
-
+			var lambda = 1/parameters.gabor.frequency; 				 // cwavelength in deg 
+			var f = 1/angle2pix(parameters.display, lambda);  		 // cyc/px 
 			var s = angle2pix(parameters.display, parameters.gabor.sigma);  		 // cyc/px 
 
-			// let h = {...parameters.color.hsv};			
-			// parameters.color.rgb     = HSVtoRGB(h.h/360, h.s, h.v);
+			/* DISKS UNIFORM */
+			
+			let h = {...parameters.color.hsv};
 
+			parameters.color.rgb     = HSVtoRGB(h.h/360, h.s, h.v);
 			uniforms.Contrast.value  = parameters.gabor.contrast;
 			uniforms.Frequency.value = f;
 			uniforms.Sigma.value     = s;			
+			uniforms.Color.value.r   = parameters.color.rgb.r;
+			uniforms.Color.value.g   = parameters.color.rgb.g;
+			uniforms.Color.value.b   = parameters.color.rgb.b;
 			break;
 	}
-
-
-	console.log (`method = ${parameters.stimulus_type}`);
-
-
-	/* color preset */
-
-	switch (parameters.color_preset) {
-
-		case "achromatic (+)":
-			parameters.color.rgb.r = 0.15;
-			parameters.color.rgb.g = 0.15;
-			parameters.color.rgb.b = 0.15;			
-			break;
-
-		case "achromatic (-)":
-			parameters.color.rgb.r = - 0.15;
-			parameters.color.rgb.g = - 0.15;
-			parameters.color.rgb.b = - 0.15;						
-			break;
-
-		case "S not L (+)":
-			parameters.color.rgb.r = +0.50;
-			parameters.color.rgb.g = -0.09;
-			parameters.color.rgb.b = +0.152;			
-			break;
-
-		case "S not L (-)":
-			parameters.color.rgb.r = -0.50;
-			parameters.color.rgb.g = +0.09;
-			parameters.color.rgb.b = -0.152;						
-			break;
-
-		case "L not S (+)":
-			parameters.color.rgb.r = +0.50;
-			parameters.color.rgb.g = +0.168;
-			parameters.color.rgb.b = -0.002;			
-			break;
-
-		case "L not S (-)":
-			parameters.color.rgb.r = -0.50;
-			parameters.color.rgb.g = -0.168;
-			parameters.color.rgb.b = +0.002;			
-			break;
-
-		case "custom":
-			break;
-
-	}
-
-
-	console.log (`method = ${parameters.color_preset}`);
-
-	uniforms.Color.value.r   = parameters.color.rgb.r;
-	uniforms.Color.value.g   = parameters.color.rgb.g;
-	uniforms.Color.value.b   = parameters.color.rgb.b;
-
 
 }
 
@@ -510,7 +438,7 @@ function getGaborShader () {
 let shader_frag = 
 
 "		  const float Pi = 3.1415927;"+
-"	      const float bi = 0.5;"+
+"	      const float BackgroundIntensity = 0.5;"+
 
 "		  uniform float Contrast;"+
 "		  uniform float Frequency;"+  
@@ -531,13 +459,11 @@ let shader_frag =
 "		  vec2  uv  = gl_FragCoord.xy;"+
 "		  float g = gauss(uv.x - Location.x, Sigma)*gauss(uv.y - Location.y, Sigma);"+
 // "		  float sv = g*(0.5*Contrast)*( sin (2.0*Pi*Frequency*uv.x) ) + BackgroundIntensity;"+     
-"		  float sv = g*(0.5*Contrast)*( cos (2.0*Pi*Frequency*(uv.x - Location.x)));"+     
+"		  float sv = g*(0.5*Contrast)*( sin (2.0*Pi*Frequency*(uv.x - Location.x))) + BackgroundIntensity;"+     
 //"		  float sv = 0.5*g + BackgroundIntensity;"+     
 
-"		  float dr = Color.r;"+
-"		  float dg = Color.g;"+
-"		  float db = Color.b;"+
-"		  gl_FragColor = vec4(dr*sv + bi, dg*sv + bi, db*sv + bi, 1.0);"+
+"		  float b = 1.0;"+
+"		  gl_FragColor = vec4(Color.r*sv, Color.g*sv, Color.b*sv, 1.0);"+
 "		  }";
 
 return shader_frag;

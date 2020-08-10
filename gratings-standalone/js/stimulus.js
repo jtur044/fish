@@ -14,7 +14,6 @@ let display = { name: "Alienware Laptop (15-inch)",
                	 			  height: 1080 }};
 */
 
-/* 
 let display = { name: "Macbook Pro Laptop (15-inch)",
                 distance: 100,
                 dimension: { width:  32.50, 
@@ -22,15 +21,6 @@ let display = { name: "Macbook Pro Laptop (15-inch)",
                              depth:  1.00  },
                 resolution: { width:  1680,
                	 			  height: 1050 }};
-*/
-
-let display = { name: "Dell E248WFP (24-inch)",
-                distance: 100,
-                dimension: { width:  32.50, 
-                             height: 21.00, 
-                             depth:  1.00  },
-                resolution: { width:  1900,
-                              height: 1200 }};
 
 
 var elem = document.documentElement;
