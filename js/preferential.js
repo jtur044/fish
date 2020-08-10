@@ -161,12 +161,12 @@ function buildMenu (callback) {
 
   var display = gui.addFolder('Display Options');
 
-  display.add(parameters.display, 'name', [ 'custom' ] ).name('Type').onFinishChange(callback);
-  display.add(parameters.display, 'distance', [ 50, 70, 100, 150 ] ).name('Distance (cm)').onFinishChange(callback);
-  display.add(parameters.display.dimension, 'height').step(0.01).name('Width (cm)').onFinishChange(callback);
-  display.add(parameters.display.dimension, 'width').step(0.01).name('Height (cm)').onFinishChange(callback);
-  display.add(parameters.display.resolution, 'height').step(1).name('Width (px)').onFinishChange(callback);
-  display.add(parameters.display.resolution, 'width').step(1).name('Height (px)').onFinishChange(callback);
+  //display.add(parameters.display, 'name', [ 'custom' ] ).name('Type').onFinishChange(callback);
+  display.add(parameters.display, 'distance', 0, 300).step(1).name('Distance (cm)').onFinishChange(callback);
+  display.add(parameters.display.dimension, 'width').step(0.01).name('Width (cm)').onFinishChange(callback);
+  display.add(parameters.display.dimension, 'height').step(0.01).name('Height (cm)').onFinishChange(callback);
+  display.add(parameters.display.resolution, 'width').step(1).name('Width (px)').onFinishChange(callback);
+  display.add(parameters.display.resolution, 'height').step(1).name('Height (px)').onFinishChange(callback);
 
   //gui.addColor(parameters.color, 'rgb').name('Color').onFinishChange(callback).listen();
   //gui.add(parameters.color, 'reset').name('Reset Color').onFinishChange(callback);
