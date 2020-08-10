@@ -159,10 +159,10 @@ function buildMenu (callback) {
   color_options.add(parameters.color.rgb, 'g', -0.5, 0.5).step(0.001).name('Green').onFinishChange(callback).listen();
   color_options.add(parameters.color.rgb, 'b', -0.5, 0.5).step(0.001).name('Blue').onFinishChange(callback).listen();
 
-  var display = gui.addFolder('Display Options');
+  var display = gui.addFolder('Display');
 
   //display.add(parameters.display, 'name', [ 'custom' ] ).name('Type').onFinishChange(callback);
-  display.add(parameters.display, 'distance', 0, 300).step(1).name('Distance (cm)').onFinishChange(callback);
+  display.add(parameters.display, 'distance', 0, 300).step(1).name('From Observer (cm)').onFinishChange(callback);
   display.add(parameters.display.dimension, 'width').step(0.01).name('Width (cm)').onFinishChange(callback);
   display.add(parameters.display.dimension, 'height').step(0.01).name('Height (cm)').onFinishChange(callback);
   display.add(parameters.display.resolution, 'width').step(1).name('Width (px)').onFinishChange(callback);
@@ -210,6 +210,7 @@ function buildMenu (callback) {
   //options.add(parameters.bars, 'direction', [ 'left', 'right' ]).name('Direction').onFinishChange(callback);
   options.open();
   color_options.open();
+  display.open();
 
 
 }
@@ -245,6 +246,7 @@ function initializeStimulus () {
 			var f = 1/angle2pix(parameters.display, lambda);  		// cyc/px 
 
 			/* DISKS UNIFORM */
+
 			uniforms = {
 				"Contrast": 		{ type: "f", value: 1.0 }, //parameters.sinusoids.contrast },
 				"Frequency": 		{ type: "f", value: f },
