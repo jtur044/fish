@@ -99,8 +99,8 @@ let parameters = { 	animation 	  : "rectangle",
 										distance      : 100,
 										dimension  : { 	width : 50.0,
 														height: 30.0 },
-										resolution : { 	width: 1920,
-														height: 1080 }},
+										resolution : { 	width: screen.width,
+														height: screen.height }},
 					color         : { 	rgb : { r: 0.5, g: 0.5, b: 0.5 },
 										window    : "step",
 										threshold : 3,
@@ -147,7 +147,7 @@ function buildMenu (callback) {
   gui.add(parameters, 'stimulus_type', [ 'gabor' ] ).name('Stimulus').onFinishChange(callback);
   gui.add(parameters, 'color_preset', [ 'achromatic (+)', 'achromatic (-)', 'S not L (+)', 'S not L (-)', 'L not S (+)', 'L not S (-)', 'custom' ]).name('Color Preset').onFinishChange(callback);
   gui.add(parameters, 'animation', [ 'cycle', 'random', 'circle', 'rectangle' ]).name('Animation').onFinishChange(callback);
-  gui.add(parameters, 'duration', 0, 10).name('Duration').onFinishChange(callback);
+  gui.add(parameters, 'duration', 0, 30).name('Duration').onFinishChange(callback);
 
   var options = gui.addFolder('Stimulus Options');
   setupMenu (options);
