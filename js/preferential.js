@@ -95,6 +95,9 @@ let parameters = { 	animation 	  : "rectangle",
 					gabor         : { frequency : 1.0,
 									  contrast  : 1.0,									
 									  sigma     : 1.0 },
+					checkerboard  : { frequency : 1.0,
+									  contrast  : 1.0,									
+									  sigma     : 1.0 },
 					display       : { 	name  : "custom",   
 										distance      : 100,
 										dimension  : { 	width : 50.0,
@@ -144,7 +147,7 @@ function buildMenu (callback) {
   log (`build the menu`);
   gui   = new dat.GUI();
 
-  gui.add(parameters, 'stimulus_type', [ 'gabor' ] ).name('Stimulus').onFinishChange(callback);
+  gui.add(parameters, 'stimulus_type', [ 'gabor', 'checkerboard' ] ).name('Stimulus').onFinishChange(callback);
   gui.add(parameters, 'color_preset', [ 'achromatic (+)', 'achromatic (-)', 'S not L (+)', 'S not L (-)', 'L not S (+)', 'L not S (-)', 'custom' ]).name('Color Preset').onFinishChange(callback);
   gui.add(parameters, 'animation', [ 'cycle', 'random', 'circle', 'rectangle' ]).name('Animation').onFinishChange(callback);
   gui.add(parameters, 'duration', 0, 30).name('Duration').onFinishChange(callback);
@@ -182,6 +185,14 @@ function buildMenu (callback) {
 			options.add(parameters.gabor, 'frequency',  0.0, 15).name('Freq.(cpd)').onFinishChange(callback);
 			options.add(parameters.gabor, 'sigma',       0.0, 5).name('Sigma (deg.)').onFinishChange(callback);
 		  	break;
+
+	  	case "checkerboard":
+
+ 			options.add(parameters.checkerboard, 'contrast',   0.0, 1.0).name('Contrast').onFinishChange(callback);
+			options.add(parameters.checkerboard, 'frequency',  0.0, 15).name('Freq.(cpd)').onFinishChange(callback);
+			options.add(parameters.checkerboard, 'sigma',       0.0, 5).name('Sigma (deg.)').onFinishChange(callback);
+		  	break;
+
 
 		 default:
 		 	throw ('error'); 	
@@ -259,6 +270,33 @@ function initializeStimulus () {
 			shader_frag = getGaborShader ();
 			break;
 
+
+		case "checkerboard":
+
+			/* DISKS UNIFORM */
+
+			log (`display`);
+			log (JSON.stringify(parameters.display));
+
+			var lambda = 1/parameters.checkerboard.frequency; 				// cwavelength in deg 
+			var f = 1/angle2pix(parameters.display, lambda);  		// cyc/px 
+
+			/* DISKS UNIFORM */
+
+			uniforms = {
+				"Contrast": 		{ type: "f", value: 1.0 }, //parameters.sinusoids.contrast },
+				"Frequency": 		{ type: "f", value: f },
+				"Sigma": 		    { type: "f", value: angle2pix(parameters.display, 1.0) },
+				"Location": 		{ type: "v2", value: new THREE.Vector2() },		
+				"Color": 			{ type: "v3", value: new THREE.Color() },										
+			};
+
+
+			shader_frag = getCheckerboardShader ();
+			//shader_frag = getCheckerboardShader ();
+			break;
+
+
 	}
 
 
@@ -322,6 +360,32 @@ function updateStimulus () {
 			uniforms.Frequency.value = f;
 			uniforms.Sigma.value     = s;			
 			break;
+
+
+		case "checkerboard":
+
+			/* disks uniform  */
+
+			var f, lambda;
+			if (parameters.checkerboard.frequency > 0) {
+				lambda = 1/parameters.checkerboard.frequency; 				 // cwavelength in deg 
+				f = 1/angle2pix(parameters.display, lambda);  		 // cyc/px 				
+			} else {
+				lambda = 0;
+				f = 0;
+			}
+
+			var s = angle2pix(parameters.display, parameters.checkerboard.sigma);  		 // cyc/px 
+
+			// let h = {...parameters.color.hsv};			
+			// parameters.color.rgb     = HSVtoRGB(h.h/360, h.s, h.v);
+
+			uniforms.Contrast.value  = parameters.checkerboard.contrast;
+			uniforms.Frequency.value = f;
+			uniforms.Sigma.value     = s;			
+			break;
+
+
 	}
 
 
@@ -534,6 +598,74 @@ let shader_frag =
 "		  float g = gauss(uv.x - Location.x, Sigma)*gauss(uv.y - Location.y, Sigma);"+
 // "		  float sv = g*(0.5*Contrast)*( sin (2.0*Pi*Frequency*uv.x) ) + BackgroundIntensity;"+     
 "		  float sv = g*(0.5*Contrast)*( cos (2.0*Pi*Frequency*(uv.x - Location.x)));"+     
+//"		  float sv = 0.5*g + BackgroundIntensity;"+     
+
+"		  float dr = Color.r;"+
+"		  float dg = Color.g;"+
+"		  float db = Color.b;"+
+"		  gl_FragColor = vec4(dr*sv + bi, dg*sv + bi, db*sv + bi, 1.0);"+
+"		  }";
+
+return shader_frag;
+}
+
+
+
+
+
+
+/* -----------------------------------------------------------------------------------------------------------------------------------
+
+EMPTY SHADER 
+
+-------------------------------------------------------------------------------------------------------------------------------------- */
+
+
+function getCheckerboardShader () {
+
+
+let shader_frag = 
+"		  const float Pi = 3.1415927;"+
+"	      const float bi = 0.5;"+
+
+"		  uniform float Contrast;"+
+"		  uniform float Frequency;"+  
+"		  uniform float Sigma;"+  
+"		  uniform vec2 Location;"+  
+"		  uniform vec3 Color;"+  
+
+
+"		float bump(float w, float x)"+
+"		{"+
+"		 float sv = float(abs(x) < w/2.0);"+
+"		 return sv;"+
+"		}"+
+
+"		float checkerboard(float phi_f, float phi_b, float uv,float uw, float Pi, float f) {"+
+"		float lambda = 1.0/f;"+
+"	    float sv_fx = sign(sin (2.0*Pi*Frequency*(uv - phi_f)));"+
+"	    float sv_fy = sign(sin (2.0*Pi*Frequency*(uw - phi_b)));"+
+"	 	float sv_mx  = bump(5.0*lambda, uv - phi_f);"+  
+" 		float sv_my  = bump(5.0*lambda, uw - phi_b);"+  
+"		float sv = sv_mx * sv_my * sv_fx * sv_fy;"+
+"	 	return sv;"+    
+//"	 	return 1.0;"+    
+"		}"+
+
+
+"		 float gauss(float x, float s) {" +
+"    		return exp(-x*x/(2.0*s*s));" + 
+"		 }"+
+
+"         void main(void) {"+
+"		  vec2  uv  = gl_FragCoord.xy;"+
+"		  float g = gauss(uv.x - Location.x, Sigma)*gauss(uv.y - Location.y, Sigma);"+
+
+// "		  float sv = g*(0.5*Contrast)*( sin (2.0*Pi*Frequency*uv.x) ) + BackgroundIntensity;"+     
+// "		  float sv = g*(0.5*Contrast)*( cos (2.0*Pi*Frequency*(uv.x - Location.x)));"+     
+//"		  float sv = g*(0.5*Contrast)*( cos (2.0*Pi*Frequency*(uv.x - Location.x)));"+     
+"		  float sv = checkerboard(Location.x, Location.y, uv.x, uv.y, Pi, Frequency);"+     
+
 //"		  float sv = 0.5*g + BackgroundIntensity;"+     
 
 "		  float dr = Color.r;"+
