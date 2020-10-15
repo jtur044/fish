@@ -99,7 +99,7 @@ let parameters = { 	animation 	  : "rectangle",
 									  contrast   : 1.0,									
 									  sigma      : 1.0,
 									  use_window : true,
-									  tiles   	 : 4.0 },
+									  tiles   	 : 16.0 },
 					display       : { 	name  : "custom",   
 										distance      : 100,
 										dimension  : { 	width : 50.0,
@@ -184,14 +184,14 @@ function buildMenu (callback) {
 	  	case "gabor":
 
  			options.add(parameters.gabor, 'contrast',   0.0, 1.0).name('Contrast').onFinishChange(callback);
-			options.add(parameters.gabor, 'frequency',  0.0, 15).name('Freq.(cpd)').onFinishChange(callback);
+			options.add(parameters.gabor, 'frequency',  0.0, 30).name('Freq.(cpd)').onFinishChange(callback);
 			options.add(parameters.gabor, 'sigma',       0.0, 5).name('Sigma (deg.)').onFinishChange(callback);
 		  	break;
 
 	  	case "checkerboard":
 
  			options.add(parameters.checkerboard, 'contrast',   0.0, 1.0).name('Contrast').onFinishChange(callback);
-			options.add(parameters.checkerboard, 'frequency',  0.0, 15).name('Freq.(cpd)').onFinishChange(callback);
+			options.add(parameters.checkerboard, 'frequency',  0.0, 30).name('Freq.(cpd)').onFinishChange(callback);
 			options.add(parameters.checkerboard, 'sigma',       0.0, 5).name('Sigma (deg.)').onFinishChange(callback);
 			options.add(parameters.checkerboard, 'use_window').name('Window').onFinishChange(callback);
 			options.add(parameters.checkerboard, 'tiles', [2,4,8,16,32,64,128]).name('Tiles (NxN)').onFinishChange(callback);
