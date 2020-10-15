@@ -95,9 +95,11 @@ let parameters = { 	animation 	  : "rectangle",
 					gabor         : { frequency : 1.0,
 									  contrast  : 1.0,									
 									  sigma     : 1.0 },
-					checkerboard  : { frequency : 1.0,
-									  contrast  : 1.0,									
-									  sigma     : 1.0 },
+					checkerboard  : { frequency  : 1.0,
+									  contrast   : 1.0,									
+									  sigma      : 1.0,
+									  use_window : true,
+									  tiles   	 : 4.0 },
 					display       : { 	name  : "custom",   
 										distance      : 100,
 										dimension  : { 	width : 50.0,
@@ -148,7 +150,7 @@ function buildMenu (callback) {
   gui   = new dat.GUI();
 
   gui.add(parameters, 'stimulus_type', [ 'gabor', 'checkerboard' ] ).name('Stimulus').onFinishChange(callback);
-  gui.add(parameters, 'color_preset', [ 'achromatic (+)', 'achromatic (-)', 'S not L (+)', 'S not L (-)', 'L not S (+)', 'L not S (-)', 'custom' ]).name('Color Preset').onFinishChange(callback);
+  gui.add(parameters, 'color_preset', [ 'achromatic (+)', 'achromatic (-)', 'New (+)', 'New (-)', 'S not L (+)', 'S not L (-)', 'L not S (+)', 'L not S (-)', 'custom' ]).name('Color Preset').onFinishChange(callback);
   gui.add(parameters, 'animation', [ 'cycle', 'random', 'circle', 'rectangle' ]).name('Animation').onFinishChange(callback);
   gui.add(parameters, 'duration', 0, 30).name('Duration').onFinishChange(callback);
 
@@ -191,6 +193,8 @@ function buildMenu (callback) {
  			options.add(parameters.checkerboard, 'contrast',   0.0, 1.0).name('Contrast').onFinishChange(callback);
 			options.add(parameters.checkerboard, 'frequency',  0.0, 15).name('Freq.(cpd)').onFinishChange(callback);
 			options.add(parameters.checkerboard, 'sigma',       0.0, 5).name('Sigma (deg.)').onFinishChange(callback);
+			options.add(parameters.checkerboard, 'use_window').name('Window').onFinishChange(callback);
+			options.add(parameters.checkerboard, 'tiles', [2,4,8,16,32,64,128]).name('Tiles (NxN)').onFinishChange(callback);
 		  	break;
 
 
@@ -281,14 +285,18 @@ function initializeStimulus () {
 			var lambda = 1/parameters.checkerboard.frequency; 				// cwavelength in deg 
 			var f = 1/angle2pix(parameters.display, lambda);  		// cyc/px 
 
+			var tiles = 
+
 			/* DISKS UNIFORM */
 
 			uniforms = {
 				"Contrast": 		{ type: "f", value: 1.0 }, //parameters.sinusoids.contrast },
 				"Frequency": 		{ type: "f", value: f },
+				"Window": 			{ type: "b", value: parameters.checkerboard.use_window },				
+				"Tiles": 			{ type: "f", value: parameters.checkerboard.tiles },				
 				"Sigma": 		    { type: "f", value: angle2pix(parameters.display, 1.0) },
 				"Location": 		{ type: "v2", value: new THREE.Vector2() },		
-				"Color": 			{ type: "v3", value: new THREE.Color() },										
+				"Color": 			{ type: "v3", value: new THREE.Color() },														
 			};
 
 
@@ -383,6 +391,8 @@ function updateStimulus () {
 			uniforms.Contrast.value  = parameters.checkerboard.contrast;
 			uniforms.Frequency.value = f;
 			uniforms.Sigma.value     = s;			
+			uniforms.Tiles.value     = parameters.checkerboard.tiles/2.0;
+			uniforms.Window.value    = parameters.checkerboard.use_window;
 			break;
 
 
@@ -431,6 +441,18 @@ function updateStimulus () {
 			parameters.color.rgb.g = -0.168;
 			parameters.color.rgb.b = +0.002;			
 			break;
+
+		case "New (+)":
+			parameters.color.rgb.r = +0.50;
+			parameters.color.rgb.g = -0.50;
+			parameters.color.rgb.b = +0.40;			
+			break;
+
+		case "New (-)":
+			parameters.color.rgb.r = -0.50;
+			parameters.color.rgb.g = +0.25;
+			parameters.color.rgb.b = +0.50;			
+			break;			
 
 		case "custom":
 			break;
@@ -627,7 +649,10 @@ function getCheckerboardShader () {
 let shader_frag = 
 "		  const float Pi = 3.1415927;"+
 "	      const float bi = 0.5;"+
+"	      const bool f = false;"+
 
+"		  uniform float Tiles;"+
+"		  uniform bool Window;"+
 "		  uniform float Contrast;"+
 "		  uniform float Frequency;"+  
 "		  uniform float Sigma;"+  
@@ -641,12 +666,12 @@ let shader_frag =
 "		 return sv;"+
 "		}"+
 
-"		float checkerboard(float phi_f, float phi_b, float uv,float uw, float Pi, float f) {"+
+"		float checkerboard(float phi_f, float phi_b, float uv,float uw, float Pi, float f, float tiles) {"+
 "		float lambda = 1.0/f;"+
 "	    float sv_fx = sign(sin (2.0*Pi*Frequency*(uv - phi_f)));"+
 "	    float sv_fy = sign(sin (2.0*Pi*Frequency*(uw - phi_b)));"+
-"	 	float sv_mx  = bump(5.0*lambda, uv - phi_f);"+  
-" 		float sv_my  = bump(5.0*lambda, uw - phi_b);"+  
+"	 	float sv_mx  = bump(tiles*lambda, uv - phi_f);"+  
+" 		float sv_my  = bump(tiles*lambda, uw - phi_b);"+  
 "		float sv = sv_mx * sv_my * sv_fx * sv_fy;"+
 "	 	return sv;"+    
 //"	 	return 1.0;"+    
@@ -663,10 +688,11 @@ let shader_frag =
 
 // "		  float sv = g*(0.5*Contrast)*( sin (2.0*Pi*Frequency*uv.x) ) + BackgroundIntensity;"+     
 // "		  float sv = g*(0.5*Contrast)*( cos (2.0*Pi*Frequency*(uv.x - Location.x)));"+     
-//"		  float sv = g*(0.5*Contrast)*( cos (2.0*Pi*Frequency*(uv.x - Location.x)));"+     
-"		  float sv = checkerboard(Location.x, Location.y, uv.x, uv.y, Pi, Frequency);"+     
+// "		  float sv = g*(0.5*Contrast)*( cos (2.0*Pi*Frequency*(uv.x - Location.x)));"+     
+"		  float sv = checkerboard(Location.x, Location.y, uv.x, uv.y, Pi, Frequency, Tiles);"+     
 
-//"		  float sv = 0.5*g + BackgroundIntensity;"+     
+// "		  sv = sv * (1.0 - Window) * g;"+     
+"		  if (Window) { sv = sv * g; };"+     
 
 "		  float dr = Color.r;"+
 "		  float dg = Color.g;"+
