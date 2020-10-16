@@ -449,13 +449,13 @@ function updateStimulus () {
 			parameters.color.rgb.b = +0.002;			
 			break;
 
-		case "New (+)":
+		case "SM, no L":
 			parameters.color.rgb.r = +0.50;
 			parameters.color.rgb.g = -0.50;
 			parameters.color.rgb.b = +0.40;			
 			break;
 
-		case "New (-)":
+		case "L, no SM":
 			parameters.color.rgb.r = -0.50;
 			parameters.color.rgb.g = +0.25;
 			parameters.color.rgb.b = +0.50;			
