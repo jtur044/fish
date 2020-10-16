@@ -150,7 +150,7 @@ function buildMenu (callback) {
   gui   = new dat.GUI();
 
   gui.add(parameters, 'stimulus_type', [ 'gabor', 'checkerboard' ] ).name('Stimulus').onFinishChange(callback);
-  gui.add(parameters, 'color_preset', [ 'achromatic (+)', 'achromatic (-)', 'New (+)', 'New (-)', 'S not L (+)', 'S not L (-)', 'L not S (+)', 'L not S (-)', 'custom' ]).name('Color Preset').onFinishChange(callback);
+  gui.add(parameters, 'color_preset', [ 'achromatic (+)', 'achromatic (-)', 'SM, no L', 'L, no SM', 'S not L (+)', 'S not L (-)', 'L not S (+)', 'L not S (-)', 'custom' ]).name('Color Preset').onFinishChange(callback);
   gui.add(parameters, 'animation', [ 'cycle', 'random', 'circle', 'rectangle' ]).name('Animation').onFinishChange(callback);
   gui.add(parameters, 'duration', 0, 30).name('Duration').onFinishChange(callback);
 
@@ -192,7 +192,7 @@ function buildMenu (callback) {
 
  			options.add(parameters.checkerboard, 'contrast',   0.0, 1.0).name('Contrast').onFinishChange(callback);
 			options.add(parameters.checkerboard, 'frequency',  0.0, 30).name('Freq.(cpd)').onFinishChange(callback);
-			options.add(parameters.checkerboard, 'sigma',       0.0, 5).name('Sigma (deg.)').onFinishChange(callback);
+			//options.add(parameters.checkerboard, 'sigma',       0.0, 5).name('Sigma (deg.)').onFinishChange(callback);
 			options.add(parameters.checkerboard, 'use_window').name('Window').onFinishChange(callback);
 			options.add(parameters.checkerboard, 'tiles', [2,4,8,16,32,64,128]).name('Tiles (NxN)').onFinishChange(callback);
 		  	break;
@@ -282,10 +282,10 @@ function initializeStimulus () {
 			log (`display`);
 			log (JSON.stringify(parameters.display));
 
-			var lambda = 1/parameters.checkerboard.frequency; 				// cwavelength in deg 
-			var f = 1/angle2pix(parameters.display, lambda);  		// cyc/px 
-
-			var tiles = 
+			var lambda 	   	= 1/parameters.checkerboard.frequency; 				// cwavelength in deg 
+			var lambda_px 	= angle2pix(parameters.display, lambda); 			// cwavelength in deg 
+			var f 			= 1/lambda_px;  		// cyc/px 
+			var Sigma 		= 0.25*lambda_px*parameters.checkerboard.tiles/4.0; 
 
 			/* DISKS UNIFORM */
 
@@ -294,7 +294,7 @@ function initializeStimulus () {
 				"Frequency": 		{ type: "f", value: f },
 				"Window": 			{ type: "b", value: parameters.checkerboard.use_window },				
 				"Tiles": 			{ type: "f", value: parameters.checkerboard.tiles },				
-				"Sigma": 		    { type: "f", value: angle2pix(parameters.display, 1.0) },
+				"Sigma": 		    { type: "f", value: Sigma },
 				"Location": 		{ type: "v2", value: new THREE.Vector2() },		
 				"Color": 			{ type: "v3", value: new THREE.Color() },														
 			};
@@ -355,11 +355,14 @@ function updateStimulus () {
 				lambda = 1/parameters.gabor.frequency; 				 // cwavelength in deg 
 				f = 1/angle2pix(parameters.display, lambda);  		 // cyc/px 				
 			} else {
-				lambda = 0;
+				lambda    = 0;
+				lambda_px = 0;
 				f = 0;
 			}
 
 			var s = angle2pix(parameters.display, parameters.gabor.sigma);  		 // cyc/px 
+
+
 
 			// let h = {...parameters.color.hsv};			
 			// parameters.color.rgb     = HSVtoRGB(h.h/360, h.s, h.v);
@@ -374,16 +377,20 @@ function updateStimulus () {
 
 			/* disks uniform  */
 
-			var f, lambda;
+			var f, lambda, lambda_px;
 			if (parameters.checkerboard.frequency > 0) {
-				lambda = 1/parameters.checkerboard.frequency; 				 // cwavelength in deg 
-				f = 1/angle2pix(parameters.display, lambda);  		 // cyc/px 				
+				lambda 	  = 1/parameters.checkerboard.frequency; 				 // cwavelength in deg 
+				lambda_px = angle2pix(parameters.display, lambda);
+				//f = 1/angle2pix(parameters.display, lambda);   // cyc/px 				
+				f = 1/lambda_px;  								 // cyc/px 				
 			} else {
-				lambda = 0;
+				lambda    = 0;
+				lambda_px = 0;
 				f = 0;
 			}
 
-			var s = angle2pix(parameters.display, parameters.checkerboard.sigma);  		 // cyc/px 
+			// var s = angle2pix(parameters.display, parameters.checkerboard.sigma);  		 // cyc/px 
+			var s = 0.25*lambda_px*parameters.checkerboard.tiles/4.0;
 
 			// let h = {...parameters.color.hsv};			
 			// parameters.color.rgb     = HSVtoRGB(h.h/360, h.s, h.v);
