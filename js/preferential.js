@@ -90,7 +90,7 @@ var uniforms, stamp;
 
 let parameters = { 	animation 	  : "rectangle", 																				
 					stimulus_type : "gabor", 
-					color_preset  : "custom", 					
+					color_preset  : 'achromatic (full)', 					
 					duration      : 2.5,
 					gabor         : { frequency : 1.0,
 									  contrast  : 1.0,									
@@ -150,7 +150,7 @@ function buildMenu (callback) {
   gui   = new dat.GUI();
 
   gui.add(parameters, 'stimulus_type', [ 'gabor', 'checkerboard' ] ).name('Stimulus').onFinishChange(callback);
-  gui.add(parameters, 'color_preset', [ 'achromatic (+)', 'achromatic (-)', 'SM, no L', 'L, no SM', 'S not L (+)', 'S not L (-)', 'L not S (+)', 'L not S (-)', 'custom' ]).name('Color Preset').onFinishChange(callback);
+  gui.add(parameters, 'color_preset', [ 'achromatic (full)', 'achromatic (+)', 'achromatic (-)', 'SM, no L', 'L, no SM', 'S not L (+)', 'S not L (-)', 'L not S (+)', 'L not S (-)', 'custom' ]).name('Color Preset').onFinishChange(callback);
   gui.add(parameters, 'animation', [ 'cycle', 'random', 'circle', 'rectangle' ]).name('Animation').onFinishChange(callback);
   gui.add(parameters, 'duration', 0, 30).name('Duration').onFinishChange(callback);
 
@@ -412,6 +412,15 @@ function updateStimulus () {
 	/* color preset */
 
 	switch (parameters.color_preset) {
+
+
+
+		case "achromatic (full)":
+			parameters.color.rgb.r = 0.5;
+			parameters.color.rgb.g = 0.5;
+			parameters.color.rgb.b = 0.5;			
+			break;
+
 
 		case "achromatic (+)":
 			parameters.color.rgb.r = 0.15;
