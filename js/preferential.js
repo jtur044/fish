@@ -88,7 +88,7 @@ var uniforms, stamp;
 
 /* PARAMETERS */
 
-let parameters = { 	animation 	  : "rectangle", 																				
+let parameters = { 	animation 	  : "up/down", 																				
 					stimulus_type : "gabor", 
 					color_preset  : 'achromatic (full)', 					
 					duration      : 2.5,
@@ -151,7 +151,7 @@ function buildMenu (callback) {
 
   gui.add(parameters, 'stimulus_type', [ 'gabor', 'checkerboard' ] ).name('Stimulus').onFinishChange(callback);
   gui.add(parameters, 'color_preset', [ 'achromatic (full)', 'achromatic (+)', 'achromatic (-)', 'SM, no L', 'L, no SM', 'S not L (+)', 'S not L (-)', 'L not S (+)', 'L not S (-)', 'custom' ]).name('Color Preset').onFinishChange(callback);
-  gui.add(parameters, 'animation', [ 'cycle', 'random', 'circle', 'rectangle' ]).name('Animation').onFinishChange(callback);
+  gui.add(parameters, 'animation', [ 'cycle', 'random', 'circle', 'rectangle','up/down' ]).name('Animation').onFinishChange(callback);
   gui.add(parameters, 'duration', 0, 30).name('Duration').onFinishChange(callback);
 
   var options = gui.addFolder('Stimulus Options');
@@ -547,6 +547,17 @@ function animate() {
 		      uniforms.Location.value.y = y;//window.innerHeight;
 
  		  	  //last = (new Date()).getTime();
+
+			break;
+
+
+		case "up/down" :
+			  
+			  var x = w/2;
+			  var y = (h/4) * Math.cos(phi) + h/2;
+
+			  uniforms.Location.value.x = x;//window.innerWidth;
+		      uniforms.Location.value.y = y;//window.innerHeight;
 
 			break;
 
