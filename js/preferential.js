@@ -88,8 +88,8 @@ var uniforms, stamp;
 
 /* PARAMETERS */
 
-let parameters = { 	animation 	  : "up/down", 																				
-					stimulus_type : "gabor", 
+let parameters = { 	animation 	  : "left/right", 																				
+					stimulus_type : "gabor (horizontal stripes)", 
 					color_preset  : 'achromatic (full)', 					
 					duration      : 2.5,
 					gabor         : { frequency : 1.0,
@@ -149,9 +149,9 @@ function buildMenu (callback) {
   log (`build the menu`);
   gui   = new dat.GUI();
 
-  gui.add(parameters, 'stimulus_type', [ 'gabor', 'checkerboard' ] ).name('Stimulus').onFinishChange(callback);
+  gui.add(parameters, 'stimulus_type', [ 'gabor (horizontal stripes)', 'gabor (vertical stripes)', 'checkerboard' ] ).name('Stimulus').onFinishChange(callback);
   gui.add(parameters, 'color_preset', [ 'achromatic (full)', 'achromatic (+)', 'achromatic (-)', 'SM, no L', 'L, no SM', 'S not L (+)', 'S not L (-)', 'L not S (+)', 'L not S (-)', 'custom' ]).name('Color Preset').onFinishChange(callback);
-  gui.add(parameters, 'animation', [ 'cycle', 'random', 'circle', 'rectangle','up/down' ]).name('Animation').onFinishChange(callback);
+  gui.add(parameters, 'animation', [ 'cycle', 'random', 'circle', 'rectangle','up/down', 'left/right' ]).name('Animation').onFinishChange(callback);
   gui.add(parameters, 'duration', 0, 30).name('Duration').onFinishChange(callback);
 
   var options = gui.addFolder('Stimulus Options');
@@ -181,7 +181,8 @@ function buildMenu (callback) {
 
 	  switch (parameters.stimulus_type) {
 
-	  	case "gabor":
+	  	case "gabor (vertical stripes)":
+	  	case "gabor (horizontal stripes)":
 
  			options.add(parameters.gabor, 'contrast',   0.0, 1.0).name('Contrast').onFinishChange(callback);
 			options.add(parameters.gabor, 'frequency',  0.0, 30).name('Freq.(cpd)').onFinishChange(callback);
@@ -250,7 +251,7 @@ function initializeStimulus () {
 
 	switch (parameters.stimulus_type) {
 
-		case "gabor":
+		case "gabor (vertical stripes)":
 
 			/* DISKS UNIFORM */
 
@@ -273,6 +274,33 @@ function initializeStimulus () {
 
 			shader_frag = getGaborShader ();
 			break;
+
+
+
+		case "gabor (horizontal stripes)":
+
+			/* DISKS UNIFORM */
+
+			log (`display`);
+			log (JSON.stringify(parameters.display));
+			var lambda = 1/parameters.gabor.frequency; 				// cwavelength in deg 
+			var f = 1/angle2pix(parameters.display, lambda);  		// cyc/px 
+
+			/* DISKS UNIFORM */
+
+			uniforms = {
+				"Contrast": 		{ type: "f", value: 1.0 }, //parameters.sinusoids.contrast },
+				"Frequency": 		{ type: "f", value: f },
+				"Sigma": 		    { type: "f", value: angle2pix(parameters.display, 1.0) },
+				"Location": 		{ type: "v2", value: new THREE.Vector2() },		
+				"Color": 			{ type: "v3", value: new THREE.Color() },										
+			};
+
+
+			shader_frag = getGaborShaderHorizontal ();
+			break;
+
+
 
 
 		case "checkerboard":
@@ -346,7 +374,9 @@ function updateStimulus () {
 
 	switch (parameters.stimulus_type) {
 
-		case "gabor":
+	  	case "gabor (vertical stripes)":
+	  	case "gabor (horizontal stripes)":
+
 
 			/* disks uniform  */
 
@@ -551,6 +581,18 @@ function animate() {
 			break;
 
 
+		case "left/right" :
+			  
+			  var x = (w/4) * Math.sin(phi) + w/2;
+			  var y = h/2;
+
+
+			  uniforms.Location.value.x = x;//window.innerWidth;
+		      uniforms.Location.value.y = y;//window.innerHeight;
+
+			break;
+
+
 		case "up/down" :
 			  
 			  var x = w/2;
@@ -657,6 +699,55 @@ let shader_frag =
 
 return shader_frag;
 }
+
+
+
+/* -----------------------------------------------------------------------------------------------------------------------------------
+
+GETGABORSHADERHORIZONTAL 
+
+-------------------------------------------------------------------------------------------------------------------------------------- */
+
+
+function getGaborShaderHorizontal () {
+
+
+let shader_frag = 
+
+"		  const float Pi = 3.1415927;"+
+"	      const float bi = 0.5;"+
+
+"		  uniform float Contrast;"+
+"		  uniform float Frequency;"+  
+"		  uniform float Sigma;"+  
+"		  uniform vec2 Location;"+  
+"		  uniform vec3 Color;"+  
+
+//"		 float gauss(float x) {" +
+//"    		return exp(-(x*x)*20.);" + 
+//"		 }"+
+
+
+"		 float gauss(float x, float s) {" +
+"    		return exp(-x*x/(2.0*s*s));" + 
+"		 }"+
+
+"         void main(void) {"+
+"		  vec2  uv  = gl_FragCoord.xy;"+
+"		  float g = gauss(uv.x - Location.x, Sigma)*gauss(uv.y - Location.y, Sigma);"+
+// "		  float sv = g*(0.5*Contrast)*( sin (2.0*Pi*Frequency*uv.x) ) + BackgroundIntensity;"+     
+"		  float sv = g*(0.5*Contrast)*( cos (2.0*Pi*Frequency*(uv.y - Location.y)));"+     
+//"		  float sv = 0.5*g + BackgroundIntensity;"+     
+
+"		  float dr = Color.r;"+
+"		  float dg = Color.g;"+
+"		  float db = Color.b;"+
+"		  gl_FragColor = vec4(dr*sv + bi, dg*sv + bi, db*sv + bi, 1.0);"+
+"		  }";
+
+return shader_frag;
+}
+
 
 
 
