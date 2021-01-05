@@ -90,7 +90,8 @@ var uniforms, stamp;
 
 let parameters = { 	animation 	  : "left/right", 																				
 					stimulus_type : "gabor (horizontal stripes)", 
-					color_preset  : 'achromatic (full)', 					
+					color_preset  : 'achromatic (full)', 			
+					gamma_preset  : 'projector', 			
 					duration      : 2.5,
 					gabor         : { frequency : 1.0,
 									  contrast  : 1.0,									
@@ -106,7 +107,8 @@ let parameters = { 	animation 	  : "left/right",
 														height: 30.0 },
 										resolution : { 	width: screen.width,
 														height: screen.height }},
-					color         : { 	rgb : { r: 0.5, g: 0.5, b: 0.5 },
+					color         : { 	rgb   : { r: 0.5, g: 0.5, b: 0.5 },
+										gamma : { r: 0.463, g: 0.425, b: 0.48 },
 										window    : "step",
 										threshold : 3,
 
@@ -151,27 +153,34 @@ function buildMenu (callback) {
 
   gui.add(parameters, 'stimulus_type', [ 'gabor (horizontal stripes)', 'gabor (vertical stripes)', 'checkerboard' ] ).name('Stimulus').onFinishChange(callback);
   gui.add(parameters, 'color_preset', [ 'achromatic (full)', 'achromatic (+)', 'achromatic (-)', 'SM, no L', 'L, no SM', 'S not L (+)', 'S not L (-)', 'L not S (+)', 'L not S (-)', 'custom' ]).name('Color Preset').onFinishChange(callback);
+  gui.add(parameters, 'gamma_preset', [ 'projector', 'none', 'custom' ]).name('Gamma Preset').onFinishChange(callback);
   gui.add(parameters, 'animation', [ 'cycle', 'random', 'circle', 'rectangle','up/down', 'left/right' ]).name('Animation').onFinishChange(callback);
   gui.add(parameters, 'duration', 0, 30).name('Duration').onFinishChange(callback);
 
   var options = gui.addFolder('Stimulus Options');
-  setupMenu (options);
 
 
   var color_options = gui.addFolder('Color Options');
-  //color_options.add(parameters.color, 'threshold', 0, 3).name('Threshold').onFinishChange(callback).listen();
   color_options.add(parameters.color.rgb, 'r', -0.5, 0.5).step(0.001).name('Red').onFinishChange(callback).listen();
   color_options.add(parameters.color.rgb, 'g', -0.5, 0.5).step(0.001).name('Green').onFinishChange(callback).listen();
   color_options.add(parameters.color.rgb, 'b', -0.5, 0.5).step(0.001).name('Blue').onFinishChange(callback).listen();
 
-  var display = gui.addFolder('Display');
 
-  //display.add(parameters.display, 'name', [ 'custom' ] ).name('Type').onFinishChange(callback);
+  var gamma_options = gui.addFolder('Gamma Options');
+  gamma_options.add(parameters.color.gamma, 'r', 0.0, 1.0).step(0.001).name('Red').onFinishChange(callback).listen();
+  gamma_options.add(parameters.color.gamma, 'g', 0.0, 1.0).step(0.001).name('Green').onFinishChange(callback).listen();
+  gamma_options.add(parameters.color.gamma, 'b', 0.0, 1.0).step(0.001).name('Blue').onFinishChange(callback).listen();
+
+
+  var display = gui.addFolder('Display');
   display.add(parameters.display, 'distance', 0, 300).step(1).name('From Observer (cm)').onFinishChange(callback);
   display.add(parameters.display.dimension, 'width').step(0.01).name('Width (cm)').onFinishChange(callback);
   display.add(parameters.display.dimension, 'height').step(0.01).name('Height (cm)').onFinishChange(callback);
   display.add(parameters.display.resolution, 'width').step(1).name('Width (px)').onFinishChange(callback);
   display.add(parameters.display.resolution, 'height').step(1).name('Height (px)').onFinishChange(callback);
+
+
+  setupMenu (options);
 
   //gui.addColor(parameters.color, 'rgb').name('Color').onFinishChange(callback).listen();
   //gui.add(parameters.color, 'reset').name('Reset Color').onFinishChange(callback);
@@ -221,11 +230,11 @@ function buildMenu (callback) {
   }
 
 
-  //options.add(parameters.bars, 'speed', 0.0, 1.0).name('Speed').onFinishChange(callback);
-  //options.add(parameters.bars, 'frequency', 0.0, 1.0).name('Frequency').onFinishChange(callback);
-  //options.add(parameters.bars, 'direction', [ 'left', 'right' ]).name('Direction').onFinishChange(callback);
+  /* information */
+
   options.open();
   color_options.open();
+  gamma_options.open();
   display.open();
 
 
@@ -269,6 +278,7 @@ function initializeStimulus () {
 				"Sigma": 		    { type: "f", value: angle2pix(parameters.display, 1.0) },
 				"Location": 		{ type: "v2", value: new THREE.Vector2() },		
 				"Color": 			{ type: "v3", value: new THREE.Color() },										
+				"Gamma": 			{ type: "v3", value: new THREE.Color() }										
 			};
 
 
@@ -293,7 +303,8 @@ function initializeStimulus () {
 				"Frequency": 		{ type: "f", value: f },
 				"Sigma": 		    { type: "f", value: angle2pix(parameters.display, 1.0) },
 				"Location": 		{ type: "v2", value: new THREE.Vector2() },		
-				"Color": 			{ type: "v3", value: new THREE.Color() },										
+				"Color": 			{ type: "v3", value: new THREE.Color() },		
+				"Gamma": 			{ type: "v3", value: new THREE.Color() }																						
 			};
 
 
@@ -325,6 +336,7 @@ function initializeStimulus () {
 				"Sigma": 		    { type: "f", value: Sigma },
 				"Location": 		{ type: "v2", value: new THREE.Vector2() },		
 				"Color": 			{ type: "v3", value: new THREE.Color() },														
+				"Gamma": 			{ type: "v3", value: new THREE.Color() }																		
 			};
 
 
@@ -513,6 +525,40 @@ function updateStimulus () {
 	uniforms.Color.value.b   = parameters.color.rgb.b;
 
 
+
+	/* do the gamma correction */ 
+
+
+	switch (parameters.gamma_preset) {
+
+
+
+		case "projector":
+			parameters.color.gamma.r = 0.463;
+			parameters.color.gamma.g = 0.425;
+			parameters.color.gamma.b = 0.48;			
+			break;
+
+		case "none":
+			parameters.color.gamma.r = 1.0;
+			parameters.color.gamma.g = 1.0;
+			parameters.color.gamma.b = 1.0;			
+			break;
+
+
+		case "custom":
+			break;
+
+	}
+
+	console.log (`gamma = ${parameters.color.gamma}`);
+
+	uniforms.Gamma.value.r   = parameters.color.gamma.r;
+	uniforms.Gamma.value.g   = parameters.color.gamma.g;
+	uniforms.Gamma.value.b   = parameters.color.gamma.b;
+
+
+
 }
 
 
@@ -674,6 +720,7 @@ let shader_frag =
 "		  uniform float Sigma;"+  
 "		  uniform vec2 Location;"+  
 "		  uniform vec3 Color;"+  
+"		  uniform vec3 Gamma;"+  
 
 //"		 float gauss(float x) {" +
 //"    		return exp(-(x*x)*20.);" + 
@@ -691,10 +738,10 @@ let shader_frag =
 "		  float sv = g*(0.5*Contrast)*( cos (2.0*Pi*Frequency*(uv.x - Location.x)));"+     
 //"		  float sv = 0.5*g + BackgroundIntensity;"+     
 
-"		  float dr = Color.r;"+
-"		  float dg = Color.g;"+
-"		  float db = Color.b;"+
-"		  gl_FragColor = vec4(dr*sv + bi, dg*sv + bi, db*sv + bi, 1.0);"+
+"		  float dr = pow(Color.r*sv + bi, Gamma.r);"+
+"		  float dg = pow(Color.g*sv + bi, Gamma.g);"+
+"		  float db = pow(Color.b*sv + bi, Gamma.b);"+
+"		  gl_FragColor = vec4(dr, dg, db, 1.0);"+
 "		  }";
 
 return shader_frag;
@@ -722,6 +769,7 @@ let shader_frag =
 "		  uniform float Sigma;"+  
 "		  uniform vec2 Location;"+  
 "		  uniform vec3 Color;"+  
+"		  uniform vec3 Gamma;"+  
 
 //"		 float gauss(float x) {" +
 //"    		return exp(-(x*x)*20.);" + 
@@ -739,10 +787,10 @@ let shader_frag =
 "		  float sv = g*(0.5*Contrast)*( cos (2.0*Pi*Frequency*(uv.y - Location.y)));"+     
 //"		  float sv = 0.5*g + BackgroundIntensity;"+     
 
-"		  float dr = Color.r;"+
-"		  float dg = Color.g;"+
-"		  float db = Color.b;"+
-"		  gl_FragColor = vec4(dr*sv + bi, dg*sv + bi, db*sv + bi, 1.0);"+
+"		  float dr = pow(Color.r*sv + bi, Gamma.r);"+
+"		  float dg = pow(Color.g*sv + bi, Gamma.g);"+
+"		  float db = pow(Color.b*sv + bi, Gamma.b);"+
+"		  gl_FragColor = vec4(dr, dg, db, 1.0);"+
 "		  }";
 
 return shader_frag;
@@ -776,6 +824,7 @@ let shader_frag =
 "		  uniform float Sigma;"+  
 "		  uniform vec2 Location;"+  
 "		  uniform vec3 Color;"+  
+"		  uniform vec3 Gamma;"+  
 
 
 "		float bump(float w, float x)"+
@@ -812,10 +861,10 @@ let shader_frag =
 // "		  sv = sv * (1.0 - Window) * g;"+     
 "		  if (Window) { sv = sv * g; };"+     
 
-"		  float dr = Color.r;"+
-"		  float dg = Color.g;"+
-"		  float db = Color.b;"+
-"		  gl_FragColor = vec4(dr*sv + bi, dg*sv + bi, db*sv + bi, 1.0);"+
+"		  float dr = pow(Color.r*sv + bi, Gamma.r);"+
+"		  float dg = pow(Color.g*sv + bi, Gamma.g);"+
+"		  float db = pow(Color.b*sv + bi, Gamma.b);"+
+"		  gl_FragColor = vec4(dr, dg, db, 1.0);"+
 "		  }";
 
 return shader_frag;
