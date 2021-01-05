@@ -166,10 +166,10 @@ function buildMenu (callback) {
   color_options.add(parameters.color.rgb, 'b', -0.5, 0.5).step(0.001).name('Blue').onFinishChange(callback).listen();
 
 
-  var gamma_options = gui.addFolder('Gamma Options');
-  gamma_options.add(parameters.color.gamma, 'r', 0.0, 1.0).step(0.001).name('Red').onFinishChange(callback).listen();
-  gamma_options.add(parameters.color.gamma, 'g', 0.0, 1.0).step(0.001).name('Green').onFinishChange(callback).listen();
-  gamma_options.add(parameters.color.gamma, 'b', 0.0, 1.0).step(0.001).name('Blue').onFinishChange(callback).listen();
+  var gamma_options = gui.addFolder('Gamma Options (r^g1, g^g2, b^g3)');
+  gamma_options.add(parameters.color.gamma, 'r', 0.0, 1.0).step(0.001).name('Red (g1)').onFinishChange(callback).listen();
+  gamma_options.add(parameters.color.gamma, 'g', 0.0, 1.0).step(0.001).name('Green (g2)').onFinishChange(callback).listen();
+  gamma_options.add(parameters.color.gamma, 'b', 0.0, 1.0).step(0.001).name('Blue (g3)').onFinishChange(callback).listen();
 
 
   var display = gui.addFolder('Display');
